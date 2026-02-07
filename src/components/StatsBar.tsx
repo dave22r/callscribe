@@ -20,7 +20,7 @@ const StatsBar = ({ calls = [] }: StatsBarProps) => {
   const stats = [
     { label: 'Active Calls', value: String(active), change: `${calls.length} total`, icon: PhoneCall, positive: active <= 2 },
     { label: 'Queued', value: String(queued), change: '', icon: Timer, positive: true },
-    { label: 'AI Confidence', value: `${avgConfidence}%`, change: calls.length ? 'avg' : '', icon: Zap, positive: avgConfidence >= 80 },
+    // { label: 'AI Confidence', value: `${avgConfidence}%`, change: calls.length ? 'avg' : '', icon: Zap, positive: avgConfidence >= 80 },
     { label: 'Dispatched', value: String(dispatched), change: '', icon: TrendingDown, positive: true },
   ];
 

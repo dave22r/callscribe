@@ -1,4 +1,4 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, CheckCircle, XCircle, Truck } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, CheckCircle, XCircle, Truck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
 import {
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { getWaitTimeLabel } from '@/lib/dispatchRecommendation';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
@@ -73,6 +74,17 @@ const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProp
             />
           </div>
         </motion.div>
+
+        {/* Wait Time */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-mono uppercase">Time Waiting</span>
+          </div>
+          <div className="pl-5">
+            <p className="text-sm font-medium">{getWaitTimeLabel(call)}</p>
+          </div>
+        </div>
 
         {/* Patient Info */}
         <div className="space-y-3">

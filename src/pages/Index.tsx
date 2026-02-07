@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsBar from '@/components/StatsBar';
 import CallQueue from '@/components/CallQueue';
+import DispatchRecommendation from '@/components/DispatchRecommendation';
 import LiveTranscript from '@/components/LiveTranscript';
 import TriagePanel from '@/components/TriagePanel';
 import { useLiveScribe } from '@/hooks/useLiveScribe';
@@ -82,12 +83,18 @@ const Index = () => {
 
       <div className="flex-1 grid grid-cols-[280px_1fr_320px] min-h-0">
         {/* Call Queue */}
-        <div className="border-r border-border overflow-hidden">
-          <CallQueue
+        <div className="border-r border-border overflow-hidden flex flex-col">
+          <DispatchRecommendation
             calls={calls}
-            selectedCallId={selectedCallId}
             onSelectCall={setSelectedCallId}
           />
+          <div className="flex-1 min-h-0">
+            <CallQueue
+              calls={calls}
+              selectedCallId={selectedCallId}
+              onSelectCall={setSelectedCallId}
+            />
+          </div>
         </div>
 
         {/* Live Transcript */}
