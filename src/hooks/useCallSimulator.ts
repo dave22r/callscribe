@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useScribe, CommitStrategy } from '@elevenlabs/react';
-import { supabase } from '@/integrations/supabase/client';
+import { getSupabase } from '@/integrations/supabase/client';
 import type { TranscriptLine, UrgencyLevel } from '@/data/mockCalls';
 
 export interface SimulationState {
@@ -93,7 +93,7 @@ export function useCallSimulator() {
     messagesRef.current.push({ role: "user", content: userText });
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-triage", {
+      const { data, error } = await getSupabase().functions.invoke("ai-triage", {
         body: { messages: messagesRef.current },
       });
 
@@ -151,7 +151,7 @@ export function useCallSimulator() {
 
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const { data, error } = await supabase.functions.invoke("elevenlabs-scribe-token");
+      const { data, error } = await getSupabase().functions.invoke("elevenlabs-scribe-token");
       if (error || !data?.token) {
         throw new Error(error?.message || "Failed to get transcription token");
       }
