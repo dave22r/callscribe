@@ -14,46 +14,56 @@ import { Mic, Square } from 'lucide-react';
 const Index = () => {
   const { calls, addCall, updateCall, getCall } = useCalls();
   const [selectedCallId, setSelectedCallId] = useState<string | null>(calls[0]?.id ?? null);
+  const [liveCallId, setLiveCallId] = useState<string | null>(null);
   const liveScribe = useLiveScribe();
 
   const selectedCall = getCall(selectedCallId);
 
-  const liveCall: EmergencyCall | null = useMemo(() => {
-    if (!liveScribe.isConnected && liveScribe.transcript.length === 0 && !liveScribe.partialTranscript) return null;
-    const transcriptLines = [...liveScribe.transcript];
-    if (liveScribe.partialTranscript.trim()) {
-      transcriptLines.push({
-        speaker: 'caller',
-        text: liveScribe.partialTranscript,
-        timestamp: '--:--',
+  // When transcription starts, create a call in the queue
+  const handleStartLive = useCallback(async () => {
+    // Create a new call in the queue first
+    const newCall = addCall([]);
+    setLiveCallId(newCall.id);
+    setSelectedCallId(newCall.id);
+    
+    // Then start transcription
+    await liveScribe.start();
+  }, [liveScribe, addCall]);
+
+  // Update the live call in real-time as transcript changes
+  useMemo(() => {
+    if (liveCallId && (liveScribe.transcript.length > 0 || liveScribe.partialTranscript)) {
+      const transcriptLines = [...liveScribe.transcript];
+      if (liveScribe.partialTranscript.trim()) {
+        transcriptLines.push({
+          speaker: 'caller',
+          text: liveScribe.partialTranscript,
+          timestamp: '--:--',
+        });
+      }
+      
+      updateCall(liveCallId, {
+        transcript: transcriptLines,
+        status: 'active',
+        summary: 'Live call in progress...',
       });
     }
-    return {
-      id: 'live',
-      callerName: 'Live call',
-      phone: '',
-      location: '',
-      urgency: 'stable' as const,
-      status: 'active' as const,
-      summary: 'Real-time transcription via ElevenLabs Scribe',
-      symptoms: [],
-      patientType: '',
-      confidence: 0,
-      timestamp: new Date(),
-      duration: 0,
-      transcript: transcriptLines,
-    };
-  }, [liveScribe.isConnected, liveScribe.transcript, liveScribe.partialTranscript]);
+  }, [liveCallId, liveScribe.transcript, liveScribe.partialTranscript, updateCall]);
 
-  const displayCall = liveCall ?? selectedCall;
+  const displayCall = selectedCall;
 
   const handleStopLive = useCallback(() => {
     liveScribe.stop();
-    if (liveScribe.transcript.length > 0) {
-      const saved = addCall(liveScribe.transcript);
-      setSelectedCallId(saved.id);
+    if (liveCallId && liveScribe.transcript.length > 0) {
+      // Update the call with final transcript
+      updateCall(liveCallId, {
+        transcript: liveScribe.transcript,
+        status: 'queued',
+        summary: 'Call completed - awaiting triage',
+      });
     }
-  }, [liveScribe, addCall]);
+    setLiveCallId(null);
+  }, [liveScribe, liveCallId, updateCall]);
 
   const handleAccept = useCallback(
     (callId: string) => {
@@ -104,7 +114,7 @@ const Index = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={liveScribe.start}
+                onClick={handleStartLive}
                 disabled={liveScribe.isConnected}
               >
                 <Mic className="w-3.5 h-3.5 mr-1.5" />

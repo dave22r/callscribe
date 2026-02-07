@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useScribe } from '@elevenlabs/react';
 import type { TranscriptLine } from '@/data/mockCalls';
 
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:3001';
 
 function formatTimestamp(seconds: number): string {
   const m = Math.floor(seconds / 60);
