@@ -6,15 +6,21 @@ interface LiveTranscriptProps {
   call: EmergencyCall | null;
 }
 
-const highlightKeywords = (text: string, keywords?: string[]) => {
-  if (!keywords || keywords.length === 0) return text;
+const DEFAULT_KEYWORDS = [
+  'not breathing', 'unconscious', 'bleeding', 'chest pain', 'heart attack',
+  'emergency', 'help', 'critical', 'severe', 'pain', 'fell', 'accident',
+  'breathing', 'conscious', 'sweating', 'numb', 'numbness', 'stroke',
+  'seizure', 'overdose', 'choking', 'allergic', 'burn', 'injury',
+];
 
-  const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
+function highlightKeywords(text: string, keywords?: string[]) {
+  const list = keywords?.length ? keywords : DEFAULT_KEYWORDS;
+  const regex = new RegExp(`(${list.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
   const parts = text.split(regex);
 
   return parts.map((part, i) => {
-    const isKeyword = keywords.some(k => k.toLowerCase() === part.toLowerCase());
-    if (isKeyword) {
+    const isKeyword = list.some((k) => part.toLowerCase() === k.toLowerCase());
+    if (isKeyword && part) {
       return (
         <span key={i} className="bg-critical/20 text-critical font-medium px-0.5 rounded-sm">
           {part}
@@ -23,7 +29,7 @@ const highlightKeywords = (text: string, keywords?: string[]) => {
     }
     return part;
   });
-};
+}
 
 const LiveTranscript = ({ call }: LiveTranscriptProps) => {
   if (!call) {

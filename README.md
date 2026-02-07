@@ -36,6 +36,24 @@ npm i
 npm run dev
 ```
 
+### Live transcription (ElevenLabs)
+
+To use **live transcription** (mic → real-time transcript in the dashboard):
+
+1. Get an API key from [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) and create a `.env` file (see `.env.example`):
+   ```bash
+   ELEVENLABS_API_KEY=your_api_key_here
+   ```
+2. Start the token server (so the API key stays server-side):
+   ```bash
+   npm run server
+   ```
+   Leave it running in a separate terminal (default: http://localhost:3001).
+3. Start the app: `npm run dev`.
+4. In the app, click **Start live transcription** in the Live Transcript panel and allow microphone access. Speak to see the transcript update in real time.
+
+To run both frontend and token server in one go: `npm run dev:all`.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

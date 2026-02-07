@@ -1,9 +1,19 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, CheckCircle, XCircle, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
+  onAccept?: () => void;
+  onOverride?: (urgency: UrgencyLevel) => void;
+  onDispatch?: () => void;
 }
 
 const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: string; glow: string }> = {
@@ -12,7 +22,7 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
   stable: { label: 'STABLE', color: 'text-stable', bg: 'bg-stable/10', glow: 'glow-stable' },
 };
 
-const TriagePanel = ({ call }: TriagePanelProps) => {
+const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProps) => {
   if (!call) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -116,15 +126,49 @@ const TriagePanel = ({ call }: TriagePanelProps) => {
         {/* Dispatcher Actions */}
         <div className="pt-2 space-y-2">
           <p className="text-[10px] font-mono text-muted-foreground uppercase">Dispatcher Actions</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
-              <CheckCircle className="w-3.5 h-3.5" />
-              Accept
-            </button>
-            <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:bg-accent/80 transition-colors border border-border">
-              <XCircle className="w-3.5 h-3.5" />
-              Override
-            </button>
+          <div className="flex flex-wrap gap-2">
+            {onAccept && call.status !== 'queued' && call.status !== 'dispatched' && (
+              <Button
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={onAccept}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                Accept
+              </Button>
+            )}
+            {onOverride && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <XCircle className="w-3.5 h-3.5" />
+                    Override urgency
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => onOverride('critical')}>
+                    Critical
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onOverride('urgent')}>
+                    Urgent
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onOverride('stable')}>
+                    Stable
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {onDispatch && call.status === 'queued' && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5"
+                onClick={onDispatch}
+              >
+                <Truck className="w-3.5 h-3.5" />
+                Dispatch
+              </Button>
+            )}
           </div>
         </div>
       </div>

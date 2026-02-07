@@ -1,14 +1,29 @@
 import { motion } from 'framer-motion';
 import { Timer, TrendingDown, PhoneCall, Zap } from 'lucide-react';
+import type { EmergencyCall } from '@/data/mockCalls';
 
-const stats = [
-  { label: 'Avg. Response Time', value: '4.2 min', change: '-18%', icon: Timer, positive: true },
-  { label: 'Active Calls', value: '4', change: '+2', icon: PhoneCall, positive: false },
-  { label: 'AI Accuracy', value: '94.3%', change: '+2.1%', icon: Zap, positive: true },
-  { label: 'Dispatch Delay', value: '1.8 min', change: '-32%', icon: TrendingDown, positive: true },
-];
+interface StatsBarProps {
+  calls?: EmergencyCall[];
+}
 
-const StatsBar = () => {
+const StatsBar = ({ calls = [] }: StatsBarProps) => {
+  const active = calls.filter((c) => c.status === 'active').length;
+  const queued = calls.filter((c) => c.status === 'queued').length;
+  const dispatched = calls.filter((c) => c.status === 'dispatched').length;
+  const avgConfidence =
+    calls.length > 0
+      ? Math.round(
+          calls.reduce((s, c) => s + c.confidence, 0) / calls.length
+        )
+      : 0;
+
+  const stats = [
+    { label: 'Active Calls', value: String(active), change: `${calls.length} total`, icon: PhoneCall, positive: active <= 2 },
+    { label: 'Queued', value: String(queued), change: '', icon: Timer, positive: true },
+    { label: 'AI Confidence', value: `${avgConfidence}%`, change: calls.length ? 'avg' : '', icon: Zap, positive: avgConfidence >= 80 },
+    { label: 'Dispatched', value: String(dispatched), change: '', icon: TrendingDown, positive: true },
+  ];
+
   return (
     <div className="grid grid-cols-4 gap-3 p-4 border-b border-border bg-card">
       {stats.map((stat, index) => (
