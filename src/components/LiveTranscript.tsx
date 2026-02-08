@@ -1,6 +1,20 @@
-import { Mic, User, Zap } from 'lucide-react';
+import { Mic, User, Zap, Globe } from 'lucide-react';
+import { useState } from 'react';
+import { translateLines } from '@/lib/translate';
 import { motion } from 'framer-motion';
 import type { EmergencyCall } from '@/data/mockCalls';
+
+// Mock translations for real-time demo
+const mockTranslations: Record<string, string> = {
+  'Services d\'urgence, quelle est votre urgence?': 'Emergency services, what is your emergency?',
+  'S\'il vous plaît, aidez-moi. J\'ai une forte douleur à la poitrine et j\'ai du mal à respirer.': 'Please help me. I have severe chest pain and difficulty breathing.',
+  'Êtes-vous consciente? Pouvez-vous me parler?': 'Are you conscious? Can you talk to me?',
+  'Oui, mais je me sens très faible et j\'ai des vertiges.': 'Yes, but I feel very weak and dizzy.',
+  'Quel âge avez-vous?': 'How old are you?',
+  'J\'ai 52 ans. J\'ai aussi des douleurs dans le bras gauche.': 'I am 52 years old. I also have pain in my left arm.',
+  'Restez calme. L\'ambulance arrive tout de suite.': 'Stay calm. The ambulance is coming right away.',
+  'Merci, dépêchez-vous s\'il vous plaît.': 'Thank you, please hurry.',
+};
 
 interface LiveTranscriptProps {
   call: EmergencyCall | null;
@@ -26,6 +40,8 @@ const highlightKeywords = (text: string, keywords?: string[]) => {
 };
 
 const LiveTranscript = ({ call }: LiveTranscriptProps) => {
+  const [realtimeTranslation, setRealtimeTranslation] = useState(false);
+
   if (!call) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -49,7 +65,15 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
             </div>
           )}
         </div>
-        <span className="text-[10px] font-mono text-muted-foreground">{call.id.toUpperCase()}</span>
+        <div className="flex gap-2">
+          <button
+            className="px-2 py-1 rounded bg-primary/10 text-primary text-xs flex items-center gap-1 hover:bg-primary/20"
+            onClick={() => setRealtimeTranslation(!realtimeTranslation)}
+          >
+            <Globe className="w-4 h-4" />
+            {realtimeTranslation ? 'Hide Translation' : 'Show Translation'}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
@@ -90,6 +114,11 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
                   }`}>
                   {highlightKeywords(line.text, line.keywords)}
                 </p>
+                {realtimeTranslation && mockTranslations[line.text] && (
+                  <p className="text-xs text-muted-foreground italic mt-1 px-3">
+                    🌐 {mockTranslations[line.text]}
+                  </p>
+                )}
               </div>
             </motion.div>
           );

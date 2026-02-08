@@ -118,6 +118,30 @@ export const mockCalls: EmergencyCall[] = [
       { speaker: 'caller', text: 'I think so but he\'s unconscious. It was at least 15 feet.', timestamp: '00:10', keywords: ['unconscious', '15 feet'] },
     ],
   },
+  {
+    id: 'call-005',
+    callerName: 'Marie Dubois',
+    phone: '+1 (555) 432-9876',
+    location: '789 Broadway Ave, Downtown',
+    urgency: 'urgent',
+    status: 'queued',
+    summary: '52-year-old female, severe chest pain and shortness of breath.',
+    symptoms: ['douleur thoracique', 'essoufflement', 'transpiration'],
+    patientType: 'Adult (52F)',
+    confidence: 91,
+    timestamp: new Date(Date.now() - 180000),
+    duration: 102,
+    transcript: [
+      { speaker: 'operator', text: 'Services d\'urgence, quelle est votre urgence?', timestamp: '00:00' },
+      { speaker: 'caller', text: 'S\'il vous plaît, aidez-moi. J\'ai une forte douleur à la poitrine et j\'ai du mal à respirer.', timestamp: '00:05', keywords: ['douleur', 'poitrine', 'respirer'] },
+      { speaker: 'operator', text: 'Êtes-vous consciente? Pouvez-vous me parler?', timestamp: '00:11' },
+      { speaker: 'caller', text: 'Oui, mais je me sens très faible et j\'ai des vertiges.', timestamp: '00:15', keywords: ['faible', 'vertiges'] },
+      { speaker: 'operator', text: 'Quel âge avez-vous?', timestamp: '00:20' },
+      { speaker: 'caller', text: 'J\'ai 52 ans. J\'ai aussi des douleurs dans le bras gauche.', timestamp: '00:23', keywords: ['bras gauche'] },
+      { speaker: 'operator', text: 'Restez calme. L\'ambulance arrive tout de suite.', timestamp: '00:28' },
+      { speaker: 'caller', text: 'Merci, dépêchez-vous s\'il vous plaît.', timestamp: '00:32' },
+    ],
+  },
 ];
 
 export const mockAmbulances: Ambulance[] = [
