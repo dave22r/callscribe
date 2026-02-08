@@ -1,11 +1,75 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+const getAIProvider = () => process.env.AI_PROVIDER || 'gemini';
+
+// Lazy initialization - create clients when needed
+let genAI = null;
+let openrouter = null;
+
+const getGeminiClient = () => {
+    if (!genAI && process.env.VITE_GEMINI_API_KEY) {
+        genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+    }
+    return genAI;
+};
+
+const getOpenRouterClient = () => {
+    if (!openrouter && process.env.OPENROUTER_API_KEY) {
+        openrouter = new OpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: process.env.OPENROUTER_API_KEY,
+        });
+    }
+    return openrouter;
+};
+
+const analyzeWithGemini = async (prompt) => {
+    const client = getGeminiClient();
+    if (!client) {
+        throw new Error('Gemini API key not configured');
+    }
+
+    const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+};
+
+const analyzeWithOpenRouter = async (prompt) => {
+    const client = getOpenRouterClient();
+    if (!client) {
+        throw new Error('OpenRouter API key not configured');
+    }
+
+    const completion = await client.chat.completions.create({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+            {
+                role: 'user',
+                content: prompt
+            }
+        ]
+    });
+
+    return completion.choices[0].message.content;
+};
+
+const analyzeWithAI = async (prompt) => {
+    const provider = getAIProvider();
+    const shouldUseOpenRouter = provider === 'openrouter' || !process.env.VITE_GEMINI_API_KEY;
+
+    console.log(`🤖 Using AI provider: ${shouldUseOpenRouter ? 'openrouter' : 'gemini'}`);
+
+    if (shouldUseOpenRouter) {
+        return await analyzeWithOpenRouter(prompt);
+    } else {
+        return await analyzeWithGemini(prompt);
+    }
+};
 
 export const analyzeCallTranscript = async (transcript) => {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
         const prompt = `You are an AI emergency medical dispatcher assistant. Analyze this emergency call transcript and provide a structured assessment.
 
 Transcript:
@@ -16,7 +80,9 @@ Provide your analysis in the following JSON format:
   "urgency": "critical" | "urgent" | "stable",
   "confidence": <number 0-100>,
   "symptoms": [<array of detected symptoms>],
+  "patientName": "<name if mentioned, otherwise 'Unknown'>",
   "patientType": "<age and gender if mentioned, e.g., 'Adult (58M)' or 'Unknown'>",
+  "location": "<address or location if mentioned, otherwise 'Unknown'>",
   "summary": "<brief 1-2 sentence summary of the emergency>",
   "keywords": [<critical words/phrases that indicate urgency>],
   "recommendedActions": [<array of immediate actions for dispatcher>]
@@ -24,14 +90,11 @@ Provide your analysis in the following JSON format:
 
 Be concise and focus on life-threatening indicators. Only respond with valid JSON.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await analyzeWithAI(prompt);
 
-        // Extract JSON from response (handle markdown code blocks)
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
-            throw new Error('No JSON found in Gemini response');
+            throw new Error('No JSON found in AI response');
         }
 
         const analysis = JSON.parse(jsonMatch[0]);
@@ -41,11 +104,10 @@ Be concise and focus on life-threatening indicators. Only respond with valid JSO
             analysis
         };
     } catch (error) {
-        console.error('Gemini API error:', error);
+        console.error('AI API error:', error);
         return {
             success: false,
             error: error.message,
-            // Fallback analysis
             analysis: {
                 urgency: 'urgent',
                 confidence: 50,
@@ -61,8 +123,6 @@ Be concise and focus on life-threatening indicators. Only respond with valid JSO
 
 export const analyzePartialTranscript = async (partialTranscript) => {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
         const prompt = `Analyze this partial emergency call transcript. Extract any critical information detected so far.
 
 Partial Transcript:
@@ -77,9 +137,7 @@ Respond with JSON:
 
 Only respond with valid JSON.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await analyzeWithAI(prompt);
 
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
@@ -88,7 +146,7 @@ Only respond with valid JSON.`;
 
         return JSON.parse(jsonMatch[0]);
     } catch (error) {
-        console.error('Gemini partial analysis error:', error);
+        console.error('AI partial analysis error:', error);
         return { detectedSymptoms: [], urgencyIndicators: [], preliminaryUrgency: 'unknown' };
     }
 };

@@ -1,5 +1,6 @@
 import express from 'express';
 import { getDB } from '../config/database.js';
+import { analyzeCallTranscript } from '../services/gemini.js';
 
 const router = express.Router();
 
@@ -9,9 +10,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const db = getDB();
-        if (!db) {
-            return res.status(503).json({ error: 'Database not connected' });
-        }
+        if (!db) return res.json({ success: true, calls: [] });
 
         const calls = await db.collection('calls')
             .find({})
@@ -27,15 +26,39 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Create a new call
+ */
+router.post('/', async (req, res) => {
+    try {
+        const db = getDB();
+        const call = req.body;
+
+        if (!call.callSid) {
+            call.callSid = `call-${Date.now()}`;
+        }
+
+        // Ensure timestamp is a Date object if present, or set to now
+        call.timestamp = call.timestamp ? new Date(call.timestamp) : new Date();
+
+        await db.collection('calls').insertOne(call);
+
+        // Emit new call event
+        const io = req.app.get('io');
+        io.emit('incoming-call', call);
+
+        res.json({ success: true, call });
+    } catch (error) {
+        console.error('Error creating call:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
  * Get a specific call by ID
  */
 router.get('/:callSid', async (req, res) => {
     try {
         const db = getDB();
-        if (!db) {
-            return res.status(503).json({ error: 'Database not connected' });
-        }
-
         const call = await db.collection('calls').findOne({
             callSid: req.params.callSid
         });
@@ -57,22 +80,22 @@ router.get('/:callSid', async (req, res) => {
 router.patch('/:callSid', async (req, res) => {
     try {
         const db = getDB();
-        if (!db) {
-            return res.status(503).json({ error: 'Database not connected' });
-        }
-
         const { status, dispatchedAmbulance, notes } = req.body;
+
+        // Create update object with only defined fields
+        const updates = { updatedAt: new Date() };
+        if (status) updates.status = status;
+        if (dispatchedAmbulance) updates.dispatchedAmbulance = dispatchedAmbulance;
+        if (notes) updates.notes = notes;
+
+        // Allow updating any other fields passed in body (like transcript, analysis results)
+        Object.assign(updates, req.body);
+        delete updates.callSid; // Don't allow updating ID
+        delete updates._id;
 
         const result = await db.collection('calls').updateOne(
             { callSid: req.params.callSid },
-            {
-                $set: {
-                    status,
-                    dispatchedAmbulance,
-                    notes,
-                    updatedAt: new Date()
-                }
-            }
+            { $set: updates }
         );
 
         if (result.matchedCount === 0) {
@@ -83,13 +106,40 @@ router.patch('/:callSid', async (req, res) => {
         const io = req.app.get('io');
         io.emit('call-updated', {
             callSid: req.params.callSid,
-            status,
-            dispatchedAmbulance
+            ...updates
         });
 
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating call:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * Analyze call transcript with AI
+ */
+router.post('/analyze', async (req, res) => {
+    try {
+        const { transcript } = req.body;
+
+        if (!transcript) {
+            return res.status(400).json({ error: 'Transcript is required' });
+        }
+
+        console.log('🤖 Analyzing transcript...');
+        const result = await analyzeCallTranscript(transcript);
+
+        if (!result.success) {
+            console.error('❌ Analysis failed:', result.error);
+            // Return success: false but with fallback analysis so UI doesn't break
+            return res.json({ success: false, analysis: result.analysis });
+        }
+
+        console.log('✅ Analysis complete');
+        res.json({ success: true, analysis: result.analysis });
+    } catch (error) {
+        console.error('Error analyzing call:', error);
         res.status(500).json({ error: error.message });
     }
 });

@@ -1,26 +1,15 @@
-import { MongoClient } from 'mongodb';
+import { dbInstance } from './localdb.js';
 
 let db = null;
-let client = null;
 
 export const connectDB = async () => {
     try {
-        const uri = process.env.VITE_MONGODB_URI;
-
-        if (!uri) {
-            console.warn('⚠️  MongoDB URI not provided. Running without database.');
-            return null;
-        }
-
-        client = new MongoClient(uri);
-        await client.connect();
-        db = client.db('callscribe');
-
-        console.log('✅ Connected to MongoDB');
+        await dbInstance.connect();
+        db = dbInstance;
+        console.log('✅ Connected to Local DB (db.json)');
         return db;
     } catch (error) {
-        console.error('❌ MongoDB connection error:', error.message);
-        console.warn('⚠️  Running without database connection');
+        console.error('❌ Local DB connection error:', error.message);
         return null;
     }
 };
@@ -33,8 +22,5 @@ export const getDB = () => {
 };
 
 export const closeDB = async () => {
-    if (client) {
-        await client.close();
-        console.log('MongoDB connection closed');
-    }
+    // No-op for local file DB
 };
