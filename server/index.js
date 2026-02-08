@@ -7,6 +7,10 @@ import twilioRoutes from './routes/twilio.js';
 import callsRouter from './routes/calls.js';
 import elevenLabsRouter from './routes/elevenlabs.js';
 import { connectDB } from './config/database.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 
@@ -24,6 +28,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../dist')));
+
 // Connect to MongoDB
 connectDB();
 
@@ -38,6 +45,12 @@ app.use('/api/elevenlabs', elevenLabsRouter);
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'CallScribe API is running' });
+});
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // Socket.io connection handling
