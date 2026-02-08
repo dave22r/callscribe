@@ -1,5 +1,5 @@
 /**
- * Minimal backend for AmbuLANCe: provides a single-use ElevenLabs token
+ * Minimal backend for CallScribe: provides a single-use ElevenLabs token
  * so the frontend can use Scribe Realtime without exposing the API key.
  *
  * Set ELEVENLABS_API_KEY in .env and run: node server/index.js
@@ -54,6 +54,6 @@ app.get('/scribe-token', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`AmbuLANCe token server running at http://localhost:${PORT}`);
+  console.log(`CallScribe token server running at http://localhost:${PORT}`);
   console.log('  GET /scribe-token → single-use ElevenLabs Scribe token');
 });

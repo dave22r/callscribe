@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are an AI-powered emergency dispatch operator for the AmbuLANCe system. Your role is to:
+const SYSTEM_PROMPT = `You are an AI-powered emergency dispatch operator for the CallScribe system. Your role is to:
 
 1. Respond calmly and professionally to emergency callers
 2. Ask targeted questions to assess the situation
@@ -41,7 +41,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://callscribe.lovable.app",
-        "X-Title": "AmbuLANCe Emergency Triage",
+        "X-Title": "CallScribe Emergency Triage",
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",

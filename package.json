@@ -12,9 +12,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "server": "node server/index.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run server\""
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@elevenlabs/react": "^0.14.0",
@@ -63,6 +61,7 @@
     "input-otp": "^1.4.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.462.0",
+    "mapbox-gl": "^3.18.1",
     "mongodb": "^7.1.0",
     "next-themes": "^0.3.0",
     "node-fetch": "^3.3.2",

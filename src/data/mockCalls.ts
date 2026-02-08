@@ -35,6 +35,28 @@ export interface Ambulance {
 
 export const mockCalls: EmergencyCall[] = [
   {
+    id: 'call-spanish',
+    callerName: 'Juan Pérez',
+    phone: '+34 600 123 456',
+    location: 'Calle Mayor 12, Madrid',
+    urgency: 'urgent',
+    status: 'queued',
+    summary: 'Paciente con dolor en el pecho y dificultad para respirar.',
+    symptoms: ['dolor en el pecho', 'dificultad para respirar'],
+    patientType: 'Adulto (45M)',
+    confidence: 80,
+    timestamp: new Date(Date.now() - 300000),
+    duration: 90,
+    transcript: [
+      { speaker: 'operator', text: 'Servicios de emergencia, ¿cuál es su emergencia?', timestamp: '00:00' },
+      { speaker: 'caller', text: 'Por favor, ayúdame. Tengo un dolor fuerte en el pecho y me cuesta respirar.', timestamp: '00:03', keywords: ['dolor', 'pecho', 'respirar'] },
+      { speaker: 'operator', text: '¿Está consciente?', timestamp: '00:08' },
+      { speaker: 'caller', text: 'Sí, pero me siento muy débil y mareado.', timestamp: '00:12', keywords: ['débil', 'mareado'] },
+      { speaker: 'operator', text: '¿Cuántos años tiene?', timestamp: '00:18' },
+      { speaker: 'caller', text: 'Tengo 45 años.', timestamp: '00:21' },
+    ],
+  },
+  {
     id: 'call-001',
     callerName: 'Maria Santos',
     phone: '+1 (555) 234-8901',

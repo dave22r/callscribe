@@ -55,23 +55,10 @@ const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProp
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono text-muted-foreground uppercase">Urgency Classification</span>
-            <span className="text-[10px] font-mono text-muted-foreground">{call.confidence}% confidence</span>
           </div>
           <div className="flex items-center gap-2">
             <AlertTriangle className={`w-5 h-5 ${urg.color}`} />
             <span className={`text-lg font-bold font-mono ${urg.color}`}>{urg.label}</span>
-          </div>
-          {/* Confidence bar */}
-          <div className="mt-3 h-1.5 bg-background/30 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${call.confidence}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className={`h-full rounded-full ${
-                call.urgency === 'critical' ? 'bg-critical' :
-                call.urgency === 'urgent' ? 'bg-urgent' : 'bg-stable'
-              }`}
-            />
           </div>
         </motion.div>
 

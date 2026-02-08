@@ -65,9 +65,6 @@ const DispatchRecommendation = ({ calls, onSelectCall }: DispatchRecommendationP
                 <Clock className="w-2.5 h-2.5" />
                 {waitLabel} wait
               </span>
-              <span className="text-[10px] text-muted-foreground">
-                {recommended.confidence}% confidence
-              </span>
             </div>
           </div>
           <Button
