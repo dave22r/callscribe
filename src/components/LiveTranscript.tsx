@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import type { EmergencyCall } from '@/data/mockCalls';
 
 // Mock translations for real-time demo
-const mockTranslations: Record<string, string> = {
+export const mockTranslations: Record<string, string> = {
   'Services d\'urgence, quelle est votre urgence?': 'Emergency services, what is your emergency?',
   'S\'il vous plaît, aidez-moi. J\'ai une forte douleur à la poitrine et j\'ai du mal à respirer.': 'Please help me. I have severe chest pain and difficulty breathing.',
   'Êtes-vous consciente? Pouvez-vous me parler?': 'Are you conscious? Can you talk to me?',
@@ -14,10 +14,14 @@ const mockTranslations: Record<string, string> = {
   'J\'ai 52 ans. J\'ai aussi des douleurs dans le bras gauche.': 'I am 52 years old. I also have pain in my left arm.',
   'Restez calme. L\'ambulance arrive tout de suite.': 'Stay calm. The ambulance is coming right away.',
   'Merci, dépêchez-vous s\'il vous plaît.': 'Thank you, please hurry.',
+  '52-year-old female, severe chest pain and shortness of breath.': 'Femme de 52 ans, douleur thoracique sévère et essoufflement.',
+  'Caller took a fall while running, reporting leg injury and bleeding. Conscious but unable to stand.': 'L\'appelant a fait une chute en courant, signale une blessure à la jambe et des saignements. Conscient mais incapable de se tenir debout.',
 };
 
 interface LiveTranscriptProps {
   call: EmergencyCall | null;
+  realtimeTranslation: boolean;
+  setRealtimeTranslation: (value: boolean) => void;
 }
 
 const highlightKeywords = (text: string, keywords?: string[], urgency: EmergencyCall['urgency'] = 'stable') => {
@@ -49,9 +53,7 @@ const highlightKeywords = (text: string, keywords?: string[], urgency: Emergency
   });
 };
 
-const LiveTranscript = ({ call }: LiveTranscriptProps) => {
-  const [realtimeTranslation, setRealtimeTranslation] = useState(false);
-
+const LiveTranscript = ({ call, realtimeTranslation, setRealtimeTranslation }: LiveTranscriptProps) => {
   if (!call) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">

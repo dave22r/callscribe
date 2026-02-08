@@ -22,6 +22,7 @@ const Index = () => {
   const [activeLiveCallId, setActiveLiveCallId] = useState<string | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'triage' | 'fleet'>('triage');
   const [ambulances, setAmbulances] = useState<Ambulance[]>(mockAmbulances);
+  const [realtimeTranslation, setRealtimeTranslation] = useState(false);
   const liveScribe = useLiveScribe({ fixedRole: 'operator' });
 
   // Auto-switch to triage tab when a call is selected
@@ -331,7 +332,11 @@ const Index = () => {
             {showMap ? (
               <AmbulanceMap ambulances={ambulances} calls={calls} />
             ) : (
-              <LiveTranscript call={displayCall} />
+              <LiveTranscript 
+                call={displayCall} 
+                realtimeTranslation={realtimeTranslation}
+                setRealtimeTranslation={setRealtimeTranslation}
+              />
             )}
           </div>
         </div>
@@ -366,6 +371,7 @@ const Index = () => {
               <TriagePanel
                 call={displayCall}
                 ambulances={ambulances}
+                realtimeTranslation={realtimeTranslation}
                 onOverride={displayCall ? (u) => handleOverride(displayCall.id, u) : undefined}
                 onDispatch={displayCall ? (ambulanceId: string) => handleDispatch(displayCall.id, ambulanceId) : undefined}
                 onResolve={displayCall ? () => handleResolve(displayCall.id) : undefined}

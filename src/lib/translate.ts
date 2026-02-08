@@ -14,10 +14,11 @@ const mockTranslations: Record<string, string> = {
 // Translate an array of transcript lines
 async function translateLines(lines: string[], targetLang = 'en'): Promise<string[]> {
   // Try mock translation first for demo
-  const allMocked = lines.every(line => line in mockTranslations);
-  if (allMocked) {
-    return lines.map(line => mockTranslations[line] || line);
-  }
+  // TEMPORARILY DISABLED TO TEST REAL API
+  // const allMocked = lines.every(line => line in mockTranslations);
+  // if (allMocked) {
+  //   return lines.map(line => mockTranslations[line] || line);
+  // }
 
   // Fallback to API (may fail with public instance)
   try {

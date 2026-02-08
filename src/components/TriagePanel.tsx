@@ -1,12 +1,14 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check, Truck, Clock } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check, Truck, Clock, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import type { EmergencyCall, UrgencyLevel, Ambulance } from '@/data/mockCalls';
 import { callsApi } from '@/services/api';
+import { mockTranslations } from '@/components/LiveTranscript';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
   ambulances: Ambulance[];
+  realtimeTranslation: boolean;
   onOverride?: (urgency: UrgencyLevel) => void;
   onDispatch?: (ambulanceId: string) => void;
   onResolve?: () => void;
@@ -18,7 +20,7 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
   stable: { label: 'STABLE', color: 'text-stable', bg: 'bg-stable/10', glow: 'glow-stable' },
 };
 
-const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
+const TriagePanel = ({ call, ambulances, realtimeTranslation, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
   const [showOverrideOptions, setShowOverrideOptions] = useState(false);
   const [showAmbulanceOptions, setShowAmbulanceOptions] = useState(false);
   const [etaRecommendation, setEtaRecommendation] = useState<any>(null);
@@ -172,6 +174,12 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
         <div className="rounded-lg bg-accent/50 p-3">
           <p className="text-[10px] font-mono text-muted-foreground uppercase mb-1.5">AI Summary</p>
           <p className="text-sm leading-relaxed text-secondary-foreground">{call.summary}</p>
+          {realtimeTranslation && (
+            <p className="text-xs text-muted-foreground italic mt-2 flex items-start gap-1">
+              <Globe className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>{mockTranslations[call.summary] || call.summary}</span>
+            </p>
+          )}
         </div>
 
         {/* Dispatcher Actions */}
