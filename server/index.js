@@ -44,6 +44,11 @@ app.get('/health', (req, res) => {
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
+    socket.on('call-partial', (payload) => {
+        // Forward partial transcript to other clients in real-time
+        socket.broadcast.emit('call-partial', payload);
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
     });

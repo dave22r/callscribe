@@ -1,9 +1,11 @@
+import type { TranscriptLine } from '@/data/mockCalls';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface Call {
     callSid: string;
     from: string;
-    transcript?: any[]; // Allow array of TranscriptLine
+    transcript?: TranscriptLine[];
     analysis?: {
         urgency: 'critical' | 'urgent' | 'stable';
         confidence: number;
@@ -56,6 +58,23 @@ export const callsApi = {
             return data.success;
         } catch (error) {
             console.error('Error updating call:', error);
+            return false;
+        }
+    },
+
+    async appendTranscriptLine(callSid: string, line: TranscriptLine, duration?: number): Promise<boolean> {
+        try {
+            const response = await fetch(`${API_URL}/api/calls/${callSid}/transcript`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ line, duration })
+            });
+            const data = await response.json();
+            return data.success;
+        } catch (error) {
+            console.error('Error appending transcript line:', error);
             return false;
         }
     },

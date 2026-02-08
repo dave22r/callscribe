@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'leaflet/dist/leaflet.css';
 
 @layer base {
   :root {
@@ -41,11 +41,11 @@
     --critical: 0 80% 55%;
     --critical-foreground: 0 0% 100%;
     --critical-glow: 0 80% 55%;
-    
+
     --urgent: 35 90% 55%;
     --urgent-foreground: 35 90% 10%;
     --urgent-glow: 35 90% 55%;
-    
+
     --stable: 145 60% 45%;
     --stable-foreground: 0 0% 100%;
     --stable-glow: 145 60% 45%;
@@ -97,7 +97,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(210,70%,55%)] to-[hsl(190,80%,50%)];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(210, 70%, 55%)] to-[hsl(190, 80%, 50%)];
   }
 
   .scrollbar-thin {
@@ -120,13 +120,25 @@
 }
 
 @keyframes pulse-critical {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @keyframes scan-line {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
 }
 
 .animate-pulse-critical {

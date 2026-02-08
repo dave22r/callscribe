@@ -2,9 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useScribe } from '@elevenlabs/react';
 import type { TranscriptLine } from '@/data/mockCalls';
 import { callsApi } from '@/services/api';
-
-// ElevenLabs API key - in production, this should be in env vars
-const ELEVENLABS_API_KEY = 'sk_b5708d8eee626b81e344cb51d107fd7f447376484c4fec47';
+import { socketService } from '@/services/socket';
 
 function formatTimestamp(seconds: number): string {
     const m = Math.floor(seconds / 60);
@@ -12,22 +10,55 @@ function formatTimestamp(seconds: number): string {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+type SpeakerRole = 'caller' | 'operator';
+
+type UseLiveScribeOptions = {
+    fixedRole?: SpeakerRole;
+};
+
+type StartOptions = {
+    callId?: string;
+    reset?: boolean;
+};
+
 /**
  * Hook for live transcription via ElevenLabs Scribe Realtime.
  * Persists to Backend API.
  */
-export function useLiveScribe() {
+export function useLiveScribe(options: UseLiveScribeOptions = {}) {
+    const role: SpeakerRole = options.fixedRole ?? 'caller';
+
     const [lines, setLines] = useState<TranscriptLine[]>([]);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [tokenError, setTokenError] = useState<string | null>(null);
-    const [currentSpeaker, setCurrentSpeaker] = useState<'caller' | 'operator'>('caller');
-    const currentSpeakerRef = useRef<'caller' | 'operator'>('caller');
     const [partialText, setPartialText] = useState('');
+    const [isConnecting, setIsConnecting] = useState(false);
 
-    // Track text that has been manually committed (to prevent double-counting)
-    const lastCommittedTextRef = useRef('');
-    // Track the active call ID relative to the backend
     const activeCallId = useRef<string | null>(null);
+    const startTimeRef = useRef<number | null>(null);
+    const lastPartialEmitAtRef = useRef(0);
+    const lastPartialTextRef = useRef('');
+    const lastManualCommitRef = useRef('');
+
+    const emitPartial = useCallback((text: string) => {
+        const callSid = activeCallId.current;
+        if (!callSid) return;
+
+        const nextText = text ?? '';
+        if (nextText === lastPartialTextRef.current) return;
+
+        const now = Date.now();
+        if (now - lastPartialEmitAtRef.current < 150) return;
+
+        lastPartialEmitAtRef.current = now;
+        lastPartialTextRef.current = nextText;
+
+        socketService.emit('call-partial', {
+            callSid,
+            speaker: role,
+            text: nextText
+        });
+    }, [role]);
 
     const scribe = useScribe({
         onWebsocketOpen: () => {
@@ -43,102 +74,98 @@ export function useLiveScribe() {
         modelId: 'scribe_v2_realtime',
         onPartialTranscript: (data) => {
             if (data?.text) {
-                // Only show text that hasn't been manually committed yet
-                const fullText = data.text;
-                const newText = fullText.slice(lastCommittedTextRef.current.length);
-                setPartialText(newText);
+                setPartialText(data.text);
+                emitPartial(data.text);
             }
         },
         onCommittedTranscript: async (data: { text: string }) => {
-            if (!data.text?.trim()) return;
+            const committedText = data.text?.trim();
+            if (!committedText) return;
 
-            // Get only the part of the text that wasn't already committed manually
-            const fullText = data.text.trim();
-            const newText = fullText.slice(lastCommittedTextRef.current.length).trim();
-
-            lastCommittedTextRef.current = ''; // Reset for next segment
-
-            if (!newText) {
+            if (lastManualCommitRef.current && committedText === lastManualCommitRef.current) {
+                lastManualCommitRef.current = '';
                 setPartialText('');
                 return;
             }
 
-            console.log('📝 Processing commit. Current Ref Speaker:', currentSpeakerRef.current);
-
-            const elapsed = startTime != null ? (Date.now() - startTime) / 1000 : 0;
+            const elapsed = startTimeRef.current != null ? (Date.now() - startTimeRef.current) / 1000 : 0;
             const newLine: TranscriptLine = {
-                speaker: currentSpeakerRef.current,
-                text: newText,
+                speaker: role,
+                text: committedText,
                 timestamp: formatTimestamp(elapsed),
             };
 
-            setLines((prev) => {
-                const newLines = [...prev, newLine];
-                if (activeCallId.current) {
-                    callsApi.updateCall(activeCallId.current, {
-                        transcript: newLines,
-                        duration: Math.ceil(elapsed)
-                    }).catch(e => console.error("Failed to sync transcript", e));
-                }
-                return newLines;
-            });
+            setLines((prev) => [...prev, newLine]);
             setPartialText('');
+            emitPartial('');
+
+            if (activeCallId.current) {
+                callsApi.appendTranscriptLine(activeCallId.current, newLine, Math.ceil(elapsed))
+                    .catch(e => console.error('Failed to sync transcript line', e));
+            }
         },
     });
 
-    const start = useCallback(async (existingCallId?: string) => {
-        console.log('🎤 Starting ElevenLabs Scribe transcription...');
-        setTokenError(null);
-        setLines([]);
+    const commitPartial = useCallback(() => {
+        const text = partialText.trim();
+        if (!text) return;
+
+        const elapsed = startTimeRef.current != null ? (Date.now() - startTimeRef.current) / 1000 : 0;
+        const newLine: TranscriptLine = {
+            speaker: role,
+            text,
+            timestamp: formatTimestamp(elapsed),
+        };
+
+        lastManualCommitRef.current = text;
+        setLines((prev) => [...prev, newLine]);
         setPartialText('');
-        lastCommittedTextRef.current = '';
+        emitPartial('');
+
+        if (activeCallId.current) {
+            callsApi.appendTranscriptLine(activeCallId.current, newLine, Math.ceil(elapsed))
+                .catch(e => console.error('Failed to sync transcript line', e));
+        }
+    }, [emitPartial, partialText, role]);
+
+    const resolveStartTime = useCallback(async (callId: string | null) => {
+        if (startTimeRef.current != null) return startTimeRef.current;
+
+        if (callId) {
+            try {
+                const call = await callsApi.getCall(callId);
+                if (call?.timestamp) {
+                    const ts = new Date(call.timestamp).getTime();
+                    startTimeRef.current = ts;
+                    setStartTime(ts);
+                    return ts;
+                }
+            } catch (error) {
+                console.warn('Failed to fetch call start time', error);
+            }
+        }
+
         const now = Date.now();
+        startTimeRef.current = now;
         setStartTime(now);
+        return now;
+    }, []);
 
-        // Reset speaker
-        console.log('🔄 Resetting speaker to caller');
-        setCurrentSpeaker('caller');
-        currentSpeakerRef.current = 'caller';
+    const connectMic = useCallback(async () => {
+        if (scribe.isConnected) return;
 
-        // Use existing ID if provided, otherwise null (will create new)
-        activeCallId.current = existingCallId || null;
+        setIsConnecting(true);
+        setTokenError(null);
 
         try {
-            if (!activeCallId.current) {
-                // 1. Create call in backend if no ID provided
-                const initialCall = {
-                    from: 'Live Caller',
-                    status: 'active',
-                    timestamp: new Date(now),
-                    transcript: [],
-                    callerName: 'Live Caller',
-                    location: 'Detecting...'
-                };
-
-                console.log('Creating backend call record...');
-                const createdCall = await callsApi.createCall(initialCall);
-
-                if (createdCall && createdCall.callSid) {
-                    activeCallId.current = createdCall.callSid;
-                    console.log('✅ Backend call created:', createdCall.callSid);
-                } else {
-                    console.error('⚠️ Failed to create backend call, running in offline mode');
-                }
-            } else {
-                console.log('✅ Using existing active call:', activeCallId.current);
-            }
-
-            // 2. Fetch ephemeral token from backend
-            console.log('🔑 Fetching access token...');
             const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
             const tokenResponse = await fetch(`${API_URL}/api/elevenlabs/token`);
             if (!tokenResponse.ok) {
                 throw new Error('Failed to fetch access token');
             }
+
             const { token } = await tokenResponse.json();
 
-            // 3. Connect to ElevenLabs
-            console.log('🔌 Connecting to ElevenLabs Scribe...');
             await scribe.connect({
                 token,
                 microphone: {
@@ -147,70 +174,86 @@ export function useLiveScribe() {
                     autoGainControl: true,
                 },
             });
-            console.log('✅ Connected to ElevenLabs Scribe! Listening for speech...');
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Could not connect to Scribe';
             console.error('❌ Scribe connection error:', e);
             setTokenError(message);
+        } finally {
+            setIsConnecting(false);
         }
     }, [scribe]);
 
-    const stop = useCallback(async () => {
-        scribe.disconnect();
-
-        // Finalize call in backend
-        if (activeCallId.current) {
-            await callsApi.updateCall(activeCallId.current, {
-                status: 'processing' // Trigger AI analysis if backend is set up to watch this
-            });
+    const start = useCallback(async ({ callId, reset }: StartOptions = {}) => {
+        if (reset) {
+            setLines([]);
+            setPartialText('');
+            startTimeRef.current = null;
+            setStartTime(null);
+            lastPartialTextRef.current = '';
+            lastPartialEmitAtRef.current = 0;
+            lastManualCommitRef.current = '';
         }
-    }, [scribe]);
 
-    const toggleSpeaker = useCallback(() => {
-        // Manual commit of current partial text to the current speaker BEFORE switching
-        const textToCommit = partialText.trim();
-
-        if (textToCommit) {
-            console.log('✂️ Manually splitting at toggle. Committing to:', currentSpeakerRef.current);
-            const elapsed = startTime != null ? (Date.now() - startTime) / 1000 : 0;
-            const splitLine: TranscriptLine = {
-                speaker: currentSpeakerRef.current,
-                text: textToCommit,
-                timestamp: formatTimestamp(elapsed),
+        if (callId) {
+            activeCallId.current = callId;
+        } else if (!activeCallId.current || reset) {
+            const now = Date.now();
+            const initialCall = {
+                from: 'Live Caller',
+                status: 'active',
+                timestamp: new Date(now),
+                transcript: [],
+                callerName: 'Live Caller',
+                location: 'Detecting...'
             };
 
-            setLines(prev => {
-                const newLines = [...prev, splitLine];
-                if (activeCallId.current) {
-                    callsApi.updateCall(activeCallId.current, { transcript: newLines })
-                        .catch(e => console.error("Failed to sync split transcript", e));
-                }
-                return newLines;
-            });
-
-            // Mark this text as committed so onCommittedTranscript doesn't double-add it
-            // We use the "full" text from Scribe which we approximate by what we already have
-            lastCommittedTextRef.current += textToCommit + " ";
-            setPartialText('');
+            const createdCall = await callsApi.createCall(initialCall);
+            if (createdCall?.callSid) {
+                activeCallId.current = createdCall.callSid;
+            }
         }
 
-        setCurrentSpeaker(prev => {
-            const next = prev === 'caller' ? 'operator' : 'caller';
-            console.log('🔀 Toggling speaker to:', next);
-            currentSpeakerRef.current = next; // Update ref immediately
-            return next;
-        });
-    }, [partialText, startTime]);
+        await resolveStartTime(activeCallId.current);
+        await connectMic();
+    }, [connectMic, resolveStartTime]);
+
+    const unmute = useCallback(async (callId?: string) => {
+        await start({ callId });
+    }, [start]);
+
+    const mute = useCallback(() => {
+        commitPartial();
+        emitPartial('');
+        scribe.disconnect();
+        setPartialText('');
+    }, [commitPartial, emitPartial, scribe]);
+
+    const stop = useCallback(async () => {
+        mute();
+
+        if (activeCallId.current) {
+            await callsApi.updateCall(activeCallId.current, {
+                status: 'processing'
+            });
+        }
+
+        activeCallId.current = null;
+        startTimeRef.current = null;
+        setStartTime(null);
+    }, [mute]);
 
     return {
         transcript: lines,
-        partialTranscript: partialText || (scribe.partialTranscript ?? ''),
+        partialTranscript: partialText,
         isConnected: scribe.isConnected ?? false,
+        isConnecting,
         error: tokenError,
-        currentSpeaker,
+        role,
         start,
         stop,
-        toggleSpeaker,
-        activeCallId: activeCallId.current
+        mute,
+        unmute,
+        activeCallId: activeCallId.current,
+        startTime,
     };
 }

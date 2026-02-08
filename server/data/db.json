@@ -444,6 +444,232 @@
         "urgent"
       ],
       "updatedAt": "2026-02-08T03:04:35.284Z"
+    },
+    {
+      "id": "call-1770525176842",
+      "callSid": "call-1770525176842",
+      "callerName": "Live Caller",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "active",
+      "summary": "Live call in progress...",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 0,
+      "timestamp": "2026-02-08T04:32:56.842Z",
+      "duration": 0,
+      "transcript": [],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:32:56.891Z"
+    },
+    {
+      "id": "call-1770525188985",
+      "callSid": "call-1770525188985",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The call lacks specific details regarding a medical emergency.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 80,
+      "timestamp": "2026-02-08T04:33:08.986Z",
+      "duration": 59,
+      "transcript": [
+        {
+          "speaker": "operator",
+          "text": "Hey hello hello hey",
+          "timestamp": "--:--"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hello hello hello Hey there hello",
+          "timestamp": "00:58"
+        }
+      ],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:34:08.001Z"
+    },
+    {
+      "id": "call-1770525372213",
+      "callSid": "call-1770525372213",
+      "callerName": "Live Caller",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "active",
+      "summary": "Live call in progress...",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 0,
+      "timestamp": "2026-02-08T04:36:12.214Z",
+      "duration": 0,
+      "transcript": [],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:36:12.229Z"
+    },
+    {
+      "id": "call-1770525459644",
+      "callSid": "call-1770525459644",
+      "callerName": "Live Caller",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "Empty call",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 0,
+      "timestamp": "2026-02-08T04:37:39.644Z",
+      "duration": 0,
+      "transcript": [],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:38:11.040Z"
+    },
+    {
+      "id": "call-1770525595292",
+      "callSid": "call-1770525595292",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The call lacks any critical information or symptoms indicating an emergency.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 10,
+      "timestamp": "2026-02-08T04:39:55.293Z",
+      "duration": 254,
+      "transcript": [
+        {
+          "speaker": "operator",
+          "text": "Hey there, hello, hello, hello, hello, hey there. (wind blowing)",
+          "timestamp": "--:--"
+        },
+        {
+          "speaker": "caller",
+          "text": "Hi, hello, hey there, hello. Hello.",
+          "timestamp": "04:13"
+        }
+      ],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:44:09.219Z"
+    },
+    {
+      "id": "call-1770525781936",
+      "callSid": "call-1770525781936",
+      "callerName": "Live Caller",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "active",
+      "summary": "Live call in progress...",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 0,
+      "timestamp": "2026-02-08T04:43:01.937Z",
+      "duration": 0,
+      "transcript": [],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:43:01.959Z"
+    },
+    {
+      "id": "call-1770525791435",
+      "callSid": "call-1770525791435",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "urgent",
+      "status": "queued",
+      "summary": "The caller reports leg pain without further details, indicating potential urgency but lacks life-threatening signs.",
+      "symptoms": [
+        "leg pain"
+      ],
+      "patientType": "Unknown",
+      "confidence": 75,
+      "timestamp": "2026-02-08T04:43:11.435Z",
+      "duration": 0,
+      "transcript": [
+        {
+          "speaker": "operator",
+          "text": "Hi. Hello. Hey. Hello. What's wrong? My leg hurts. (clicking)",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [
+        "leg hurts"
+      ],
+      "updatedAt": "2026-02-08T04:44:18.376Z"
+    },
+    {
+      "id": "call-1770526126126",
+      "callSid": "call-1770526126126",
+      "callerName": "Live Caller",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "active",
+      "summary": "Live call in progress...",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 0,
+      "timestamp": "2026-02-08T04:48:46.127Z",
+      "duration": 47,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hey there, hello. My leg hurts.",
+          "timestamp": "00:14"
+        },
+        {
+          "speaker": "operator",
+          "text": "Okay hello okay where are you located",
+          "timestamp": "00:28"
+        },
+        {
+          "speaker": "caller",
+          "text": "I'm not UBC. I'm not UBC.",
+          "timestamp": "00:46"
+        }
+      ],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:49:32.984Z"
+    },
+    {
+      "id": "call-1770526215857",
+      "callSid": "call-1770526215857",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The patient initiated a call but has not provided relevant information regarding symptoms or location.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 50,
+      "timestamp": "2026-02-08T04:50:15.858Z",
+      "duration": 79,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hello? Okay, let me go through this.",
+          "timestamp": "00:37"
+        },
+        {
+          "speaker": "operator",
+          "text": "Say something. Hello. How are you? Where are you? Um, I'm",
+          "timestamp": "--:--"
+        },
+        {
+          "speaker": "caller",
+          "text": "- My head hurts. I'm at UBC right now and my name is Catherine. Help, please. - And then let me just end the call. - Mm, okay. - You sure? - It's difficult to see it. Yeah, I thought it stopped, but it's still- - Oh, wait, 'cause I think you-",
+          "timestamp": "01:18"
+        }
+      ],
+      "tags": [],
+      "updatedAt": "2026-02-08T04:51:34.619Z"
     }
   ]
 }

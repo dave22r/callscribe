@@ -44,7 +44,8 @@ class SocketService {
             'call-analyzed',
             'recording-complete',
             'call-status',
-            'call-updated'
+            'call-updated',
+            'call-partial'
         ];
 
         events.forEach(event => {
