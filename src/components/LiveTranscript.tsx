@@ -114,9 +114,9 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
                   }`}>
                   {highlightKeywords(line.text, line.keywords)}
                 </p>
-                {realtimeTranslation && mockTranslations[line.text] && (
+                {realtimeTranslation && (
                   <p className="text-xs text-muted-foreground italic mt-1 px-3">
-                    🌐 {mockTranslations[line.text]}
+                    🌐 {mockTranslations[line.text] || line.text}
                   </p>
                 )}
               </div>

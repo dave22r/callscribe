@@ -1,13 +1,19 @@
 import { motion } from 'framer-motion';
 import { Timer, TrendingDown, PhoneCall, Zap } from 'lucide-react';
 
-const stats = [
-  { label: 'Avg. Response Time', value: '4.2 min', change: '-18%', icon: Timer, positive: true },
-  { label: 'Active Calls', value: '4', change: '+2', icon: PhoneCall, positive: false },
-  { label: 'Dispatch Delay', value: '1.8 min', change: '-32%', icon: TrendingDown, positive: true },
-];
+interface StatsBarProps {
+  activeCallsCount: number;
+  avgResponseTime: string;
+  dispatchDelay: string;
+}
 
-const StatsBar = () => {
+const StatsBar = ({ activeCallsCount, avgResponseTime, dispatchDelay }: StatsBarProps) => {
+  const stats = [
+    { label: 'Avg. Response Time', value: avgResponseTime, icon: Timer },
+    { label: 'Active Calls', value: activeCallsCount.toString(), icon: PhoneCall },
+    { label: 'Dispatch Delay', value: dispatchDelay, icon: TrendingDown },
+  ];
+
   return (
     <div className="grid grid-cols-3 gap-3 p-4 border-b border-border bg-card">
       {stats.map((stat, index) => (
@@ -25,9 +31,6 @@ const StatsBar = () => {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</p>
             <div className="flex items-baseline gap-2">
               <span className="text-base font-semibold font-mono">{stat.value}</span>
-              <span className={`text-[10px] font-mono ${stat.positive ? 'text-stable' : 'text-urgent'}`}>
-                {stat.change}
-              </span>
             </div>
           </div>
         </motion.div>

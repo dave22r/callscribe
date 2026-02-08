@@ -1,4 +1,4 @@
-import { Activity, Bell, Radio, Shield } from 'lucide-react';
+import { Activity, Radio, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface DashboardHeaderProps {
@@ -30,10 +30,10 @@ const DashboardHeader = ({ pendingCallCount = 0 }: DashboardHeaderProps) => {
 
         <div className="h-6 w-px bg-border mx-2" />
 
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-stable/10">
+        {/* <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-stable/10">
           <div className="w-1.5 h-1.5 rounded-full bg-stable animate-pulse" />
-          <span className="text-[11px] font-mono text-stable font-medium">SYSTEM ONLINE</span>
-        </div>
+          {/* <span className="text-[11px] font-mono text-stable font-medium">SYSTEM ONLINE</span> */}
+        {/* </div> */}
       </div>
 
       <div className="flex items-center gap-4">
@@ -46,13 +46,6 @@ const DashboardHeader = ({ pendingCallCount = 0 }: DashboardHeaderProps) => {
           <Shield className="w-3.5 h-3.5" />
           <span className="text-[11px] font-mono">5 UNITS</span>
         </div> */}
-
-        <div className="h-6 w-px bg-border" />
-
-        <button className="relative p-1.5 rounded-md hover:bg-accent transition-colors">
-          <Bell className="w-4 h-4 text-muted-foreground" />
-          <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-critical rounded-full animate-pulse-critical" />
-        </button>
 
         <div className="text-right">
           <p className="text-[11px] font-mono text-foreground leading-none">

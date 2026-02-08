@@ -15,6 +15,8 @@ export interface EmergencyCall {
   timestamp: Date;
   duration: number; // seconds
   transcript: TranscriptLine[];
+  resolvedAt?: Date;
+  dispatchedAt?: Date;
 }
 
 export interface TranscriptLine {
@@ -27,7 +29,7 @@ export interface TranscriptLine {
 export interface Ambulance {
   id: string;
   unit: string;
-  status: 'available' | 'en-route' | 'on-scene' | 'returning';
+  status: 'available' | 'en-route' | 'on-scene';
   crew: string;
   location: string;
   assignedCall?: string;
@@ -39,7 +41,7 @@ export const mockCalls: EmergencyCall[] = [
     id: 'call-001',
     callerName: 'Maria Santos',
     phone: '+1 (555) 234-8901',
-    location: '142 Oak Street, Downtown',
+    location: '1250 Granville Street, Downtown Vancouver',
     urgency: 'critical',
     status: 'active',
     summary: '58-year-old male, chest pain, difficulty breathing. History of cardiac issues.',
@@ -62,7 +64,7 @@ export const mockCalls: EmergencyCall[] = [
     id: 'call-002',
     callerName: 'James Chen',
     phone: '+1 (555) 876-5432',
-    location: '89 Riverside Ave, Westside',
+    location: '3500 Cambie Street, Vancouver',
     urgency: 'urgent',
     status: 'queued',
     summary: 'Vehicle collision, driver conscious but bleeding from forehead. Airbag deployed.',
@@ -82,7 +84,7 @@ export const mockCalls: EmergencyCall[] = [
     id: 'call-003',
     callerName: 'Linda Park',
     phone: '+1 (555) 345-6789',
-    location: '2100 Maple Drive, Northgate',
+    location: '850 West 41st Avenue, Kerrisdale Vancouver',
     urgency: 'stable',
     status: 'queued',
     summary: 'Child fell from playground equipment. Possible wrist fracture, no head injury.',
@@ -102,7 +104,7 @@ export const mockCalls: EmergencyCall[] = [
     id: 'call-004',
     callerName: 'Robert Kim',
     phone: '+1 (555) 901-2345',
-    location: '456 Industrial Blvd, East District',
+    location: '2750 East Hastings Street, Vancouver',
     urgency: 'critical',
     status: 'dispatched',
     summary: 'Workplace accident. Patient unconscious after fall from scaffolding, approximately 15 feet.',
@@ -122,7 +124,7 @@ export const mockCalls: EmergencyCall[] = [
     id: 'call-005',
     callerName: 'Marie Dubois',
     phone: '+1 (555) 432-9876',
-    location: '789 Broadway Ave, Downtown',
+    location: '1055 West Broadway, Vancouver',
     urgency: 'urgent',
     status: 'queued',
     summary: '52-year-old female, severe chest pain and shortness of breath.',
@@ -149,5 +151,5 @@ export const mockAmbulances: Ambulance[] = [
   { id: 'amb-2', unit: 'MEDIC-2', status: 'on-scene', crew: 'Johnson / Lee', location: '456 Industrial Blvd', assignedCall: 'call-004' },
   { id: 'amb-3', unit: 'MEDIC-3', status: 'available', crew: 'Williams / Garcia', location: 'Station 3 — Central' },
   { id: 'amb-4', unit: 'MEDIC-4', status: 'available', crew: 'Brown / Nguyen', location: 'Station 1 — Northgate' },
-  { id: 'amb-5', unit: 'MEDIC-5', status: 'returning', crew: 'Davis / Wilson', location: 'Returning from Memorial Hospital', eta: 12 },
+  { id: 'amb-5', unit: 'MEDIC-5', status: 'available', crew: 'Davis / Wilson', location: 'Station' },
 ];

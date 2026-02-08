@@ -1,12 +1,13 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
+import type { EmergencyCall, UrgencyLevel, Ambulance } from '@/data/mockCalls';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
+  ambulances: Ambulance[];
   onOverride?: (urgency: UrgencyLevel) => void;
-  onDispatch?: () => void;
+  onDispatch?: (ambulanceId: string) => void;
   onResolve?: () => void;
 }
 
@@ -16,8 +17,9 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
   stable: { label: 'STABLE', color: 'text-stable', bg: 'bg-stable/10', glow: 'glow-stable' },
 };
 
-const TriagePanel = ({ call, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
+const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
   const [showOverrideOptions, setShowOverrideOptions] = useState(false);
+  const [showAmbulanceOptions, setShowAmbulanceOptions] = useState(false);
 
   if (!call) {
     return (
@@ -35,15 +37,19 @@ const TriagePanel = ({ call, onOverride, onDispatch, onResolve }: TriagePanelPro
     setShowOverrideOptions(false);
   };
 
+  const handleDispatchClick = (ambulanceId: string) => {
+    onDispatch?.(ambulanceId);
+    setShowAmbulanceOptions(false);
+  };
+
+  const availableAmbulances = ambulances.filter(amb => amb.status === 'available');
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Brain className="w-3.5 h-3.5 text-primary" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            AI Triage Assessment
-          </h2>
-        </div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          AI Triage Assessment
+        </h2>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
@@ -150,6 +156,36 @@ const TriagePanel = ({ call, onOverride, onDispatch, onResolve }: TriagePanelPro
                   <div className="w-2 h-2 rounded-full bg-stable" />
                   <span className="font-mono text-stable">STABLE</span>
                 </button>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <button 
+              onClick={() => setShowAmbulanceOptions(!showAmbulanceOptions)}
+              disabled={!onDispatch || availableAmbulances.length === 0}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-critical/20 text-critical text-xs font-medium hover:bg-critical/30 transition-colors border border-critical/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Truck className="w-3.5 h-3.5" />
+              Dispatch Ambulance
+            </button>
+            
+            {showAmbulanceOptions && onDispatch && availableAmbulances.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
+                {availableAmbulances.map((amb) => (
+                  <button
+                    key={amb.id}
+                    onClick={() => handleDispatchClick(amb.id)}
+                    className="w-full flex flex-col gap-1 px-3 py-2 text-xs hover:bg-accent transition-colors text-left border-b border-border last:border-0"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-semibold">{amb.unit}</span>
+                      <span className="text-stable text-[10px]">AVAILABLE</span>
+                    </div>
+                    <span className="text-muted-foreground text-[10px]">{amb.crew}</span>
+                    <span className="text-muted-foreground text-[10px] truncate">{amb.location}</span>
+                  </button>
+                ))}
               </div>
             )}
           </div>
