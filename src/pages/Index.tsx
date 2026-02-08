@@ -1,137 +1,164 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import VancouverMap from '@/components/VancouverMap';
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsBar from '@/components/StatsBar';
 import CallQueue from '@/components/CallQueue';
+import DispatchRecommendation from '@/components/DispatchRecommendation';
 import LiveTranscript from '@/components/LiveTranscript';
 import TriagePanel from '@/components/TriagePanel';
-import AmbulanceFleet from '@/components/AmbulanceFleet';
-import AmbulanceMap from '@/components/AmbulanceMap';
-import { mockCalls, mockAmbulances } from '@/data/mockCalls';
-import { useSocket, useSocketEvent } from '@/hooks/useSocket';
-import { Wifi, WifiOff } from 'lucide-react';
+import { useLiveScribe } from '@/hooks/useLiveScribe';
+import { useCalls } from '@/hooks/useCalls';
 import type { EmergencyCall } from '@/data/mockCalls';
+import { Button } from '@/components/ui/button';
+import { Mic, Square } from 'lucide-react';
 
 const Index = () => {
-  const [selectedCallId, setSelectedCallId] = useState<string | null>(mockCalls[0].id);
-  const [calls, setCalls] = useState(mockCalls);
-  const [showMap, setShowMap] = useState(false);
-  const { isConnected } = useSocket();
+  const { calls, addCall, updateCall, getCall } = useCalls();
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(calls[0]?.id ?? null);
+  const liveScribe = useLiveScribe();
 
-  const selectedCall = calls.find(c => c.id === selectedCallId) ?? null;
+  const selectedCall = getCall(selectedCallId);
 
-  // Handle incoming calls from Socket.io
-  const handleIncomingCall = useCallback((data: any) => {
-    console.log('📞 Incoming call:', data);
-
-    const newCall: EmergencyCall = {
-      id: data.callSid,
-      callerName: data.from || 'Unknown Caller',
-      phone: data.from,
-      location: 'Location pending...',
-      urgency: 'urgent',
-      status: 'active',
-      summary: 'Call in progress...',
+  const liveCall: EmergencyCall | null = useMemo(() => {
+    if (!liveScribe.isConnected && liveScribe.transcript.length === 0 && !liveScribe.partialTranscript) return null;
+    const transcriptLines = [...liveScribe.transcript];
+    if (liveScribe.partialTranscript.trim()) {
+      transcriptLines.push({
+        speaker: 'caller',
+        text: liveScribe.partialTranscript,
+        timestamp: '--:--',
+      });
+    }
+    return {
+      id: 'live',
+      callerName: 'Live call',
+      phone: '',
+      location: '',
+      urgency: 'stable' as const,
+      status: 'active' as const,
+      summary: 'Real-time transcription via ElevenLabs Scribe',
       symptoms: [],
-      patientType: 'Unknown',
+      patientType: '',
       confidence: 0,
-      timestamp: new Date(data.timestamp),
+      timestamp: new Date(),
       duration: 0,
-      transcript: []
+      transcript: transcriptLines,
     };
+  }, [liveScribe.isConnected, liveScribe.transcript, liveScribe.partialTranscript]);
 
-    setCalls(prev => [newCall, ...prev]);
-    setSelectedCallId(newCall.id);
-  }, []);
+  const displayCall = liveCall ?? selectedCall;
 
-  // Handle call analysis from Gemini
-  const handleCallAnalyzed = useCallback((data: any) => {
-    console.log('🤖 Call analyzed:', data);
+  const handleStopLive = useCallback(() => {
+    liveScribe.stop();
+    // Combine transcript and partial transcript
+    let transcriptLines = [...liveScribe.transcript];
+    if (liveScribe.partialTranscript && liveScribe.partialTranscript.trim()) {
+      transcriptLines.push({
+        speaker: 'caller',
+        text: liveScribe.partialTranscript,
+        timestamp: '--:--',
+      });
+    }
+    if (transcriptLines.length > 0) {
+      // Add call with default values for missing fields
+      const saved = addCall(transcriptLines);
+      setSelectedCallId(saved.id);
+    }
+  }, [liveScribe, addCall]);
 
-    setCalls(prev => prev.map(call => {
-      if (call.id === data.callSid) {
-        return {
-          ...call,
-          transcript: data.transcript ? [
-            { speaker: 'caller' as const, text: data.transcript, timestamp: '00:00' }
-          ] : call.transcript,
-          urgency: data.analysis.urgency,
-          confidence: data.analysis.confidence,
-          symptoms: data.analysis.symptoms,
-          patientType: data.analysis.patientType,
-          summary: data.analysis.summary,
-          status: 'queued'
-        };
-      }
-      return call;
-    }));
-  }, []);
+  const handleAccept = useCallback(
+    (callId: string) => {
+      updateCall(callId, { status: 'queued' });
+    },
+    [updateCall]
+  );
 
-  // Handle call status updates
-  const handleCallStatus = useCallback((data: any) => {
-    console.log('📊 Call status:', data);
-  }, []);
+  const handleOverride = useCallback(
+    (callId: string, urgency: EmergencyCall['urgency']) => {
+      updateCall(callId, { urgency, status: 'queued' });
+    },
+    [updateCall]
+  );
 
-  // Subscribe to Socket.io events
-  useSocketEvent('incoming-call', handleIncomingCall);
-  useSocketEvent('call-analyzed', handleCallAnalyzed);
-  useSocketEvent('call-status', handleCallStatus);
+  const handleDispatch = useCallback(
+    (callId: string) => {
+      updateCall(callId, { status: 'dispatched' });
+    },
+    [updateCall]
+  );
+
+  const [showMap, setShowMap] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <DashboardHeader />
+      <StatsBar calls={calls} />
 
-      {/* Connection Status Indicator */}
-      <div className="px-4 py-1 bg-accent/30 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isConnected ? (
-            <>
-              <Wifi className="w-3 h-3 text-green-500" />
-              <span className="text-xs text-green-600 font-medium">Connected to API</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-3 h-3 text-orange-500" />
-              <span className="text-xs text-orange-600 font-medium">Offline - Using mock data</span>
-            </>
-          )}
-        </div>
-        <button
-          onClick={() => setShowMap(!showMap)}
-          className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+
+      {/* Toggle Map Button */}
+      <div className="my-4 mx-auto w-full max-w-4xl flex flex-col items-center">
+        <Button
+          variant="outline"
+          onClick={() => setShowMap((prev) => !prev)}
+          className="mb-2"
         >
-          {showMap ? 'Show Fleet List' : 'Show Map'}
-        </button>
+          {showMap ? 'Hide Map' : 'Show Map'}
+        </Button>
+        {showMap && <VancouverMap />}
       </div>
 
-      <StatsBar />
-
-      <div className="flex-1 grid grid-cols-[280px_1fr_320px_280px] min-h-0">
+      <div className="flex-1 grid grid-cols-[280px_1fr_320px] min-h-0">
         {/* Call Queue */}
-        <div className="border-r border-border overflow-hidden">
-          <CallQueue
+        <div className="border-r border-border overflow-hidden flex flex-col">
+          <DispatchRecommendation
             calls={calls}
-            selectedCallId={selectedCallId}
             onSelectCall={setSelectedCallId}
           />
+          <div className="flex-1 min-h-0">
+            <CallQueue
+              calls={calls}
+              selectedCallId={selectedCallId}
+              onSelectCall={setSelectedCallId}
+            />
+          </div>
         </div>
 
         {/* Live Transcript */}
-        <div className="border-r border-border overflow-hidden">
-          <LiveTranscript call={selectedCall} />
+        <div className="border-r border-border overflow-hidden flex flex-col">
+          <div className="px-4 py-2 border-b border-border flex items-center gap-2 shrink-0">
+            {!liveScribe.isConnected ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={liveScribe.start}
+                disabled={liveScribe.isConnected}
+              >
+                <Mic className="w-3.5 h-3.5 mr-1.5" />
+                Start live transcription
+              </Button>
+            ) : (
+              <Button size="sm" variant="destructive" onClick={handleStopLive}>
+                <Square className="w-3.5 h-3.5 mr-1.5" />
+                Stop & save
+              </Button>
+            )}
+            {liveScribe.error && (
+              <span className="text-xs text-destructive">{liveScribe.error}</span>
+            )}
+          </div>
+          <div className="flex-1 min-h-0">
+            <LiveTranscript call={displayCall} />
+          </div>
         </div>
 
         {/* AI Triage Panel */}
-        <div className="border-r border-border overflow-hidden">
-          <TriagePanel call={selectedCall} />
-        </div>
-
-        {/* Ambulance Fleet or Map */}
         <div className="overflow-hidden">
-          {showMap ? (
-            <AmbulanceMap ambulances={mockAmbulances} />
-          ) : (
-            <AmbulanceFleet ambulances={mockAmbulances} />
-          )}
+          <TriagePanel
+            call={displayCall}
+            onAccept={displayCall ? () => handleAccept(displayCall.id) : undefined}
+            onOverride={displayCall ? (u) => handleOverride(displayCall.id, u) : undefined}
+            onDispatch={displayCall ? () => handleDispatch(displayCall.id) : undefined}
+          />
         </div>
       </div>
     </div>

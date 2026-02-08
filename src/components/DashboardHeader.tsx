@@ -18,7 +18,7 @@ const DashboardHeader = () => {
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-tight leading-none">
-              Ambu<span className="text-critical">LANCE</span>
+              Call<span className="text-critical">Scribe</span>
             </h1>
             <p className="text-[10px] text-muted-foreground leading-none mt-0.5">AI-Assisted Triage</p>
           </div>

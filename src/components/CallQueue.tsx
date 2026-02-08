@@ -1,6 +1,7 @@
-import { Phone, Clock, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Clock, AlertTriangle, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
+import { getWaitTimeLabel } from '@/lib/dispatchRecommendation';
 
 interface CallQueueProps {
   calls: EmergencyCall[];
@@ -19,12 +20,6 @@ const statusLabels: Record<string, string> = {
   queued: 'QUEUED',
   dispatched: 'DISPATCHED',
   resolved: 'RESOLVED',
-};
-
-const formatDuration = (seconds: number) => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
 const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
@@ -75,13 +70,19 @@ const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
               <p className="text-[11px] text-muted-foreground truncate mt-0.5">{call.location}</p>
 
               <div className="flex items-center gap-3 mt-2">
-                <div className="flex items-center gap-1 text-muted-foreground">
+                <div className="flex items-center gap-1 text-muted-foreground" title="Time waiting">
                   <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{formatDuration(call.duration)}</span>
+                  <span className="text-[10px] font-mono">Wait: {getWaitTimeLabel(call)}</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <AlertTriangle className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{call.confidence}%</span>
+                  <span className="text-[10px] font-mono">
+                    {call.urgency === 'critical'
+                      ? 'Critical phrases detected'
+                      : call.urgency === 'urgent'
+                        ? 'Urgent phrases detected'
+                        : 'No urgent phrases'}
+                  </span>
                 </div>
                 <ChevronRight className="w-3 h-3 text-muted-foreground ml-auto" />
               </div>
