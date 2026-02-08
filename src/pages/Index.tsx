@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import VancouverMap from '@/components/VancouverMap';
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsBar from '@/components/StatsBar';
 import CallQueue from '@/components/CallQueue';
@@ -49,8 +50,18 @@ const Index = () => {
 
   const handleStopLive = useCallback(() => {
     liveScribe.stop();
-    if (liveScribe.transcript.length > 0) {
-      const saved = addCall(liveScribe.transcript);
+    // Combine transcript and partial transcript
+    let transcriptLines = [...liveScribe.transcript];
+    if (liveScribe.partialTranscript && liveScribe.partialTranscript.trim()) {
+      transcriptLines.push({
+        speaker: 'caller',
+        text: liveScribe.partialTranscript,
+        timestamp: '--:--',
+      });
+    }
+    if (transcriptLines.length > 0) {
+      // Add call with default values for missing fields
+      const saved = addCall(transcriptLines);
       setSelectedCallId(saved.id);
     }
   }, [liveScribe, addCall]);
@@ -76,10 +87,25 @@ const Index = () => {
     [updateCall]
   );
 
+  const [showMap, setShowMap] = useState(false);
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <DashboardHeader />
       <StatsBar calls={calls} />
+
+
+      {/* Toggle Map Button */}
+      <div className="my-4 mx-auto w-full max-w-4xl flex flex-col items-center">
+        <Button
+          variant="outline"
+          onClick={() => setShowMap((prev) => !prev)}
+          className="mb-2"
+        >
+          {showMap ? 'Hide Map' : 'Show Map'}
+        </Button>
+        {showMap && <VancouverMap />}
+      </div>
 
       <div className="flex-1 grid grid-cols-[280px_1fr_320px] min-h-0">
         {/* Call Queue */}

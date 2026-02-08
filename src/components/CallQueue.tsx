@@ -76,7 +76,13 @@ const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <AlertTriangle className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{call.confidence}%</span>
+                  <span className="text-[10px] font-mono">
+                    {call.urgency === 'critical'
+                      ? 'Critical phrases detected'
+                      : call.urgency === 'urgent'
+                        ? 'Urgent phrases detected'
+                        : 'No urgent phrases'}
+                  </span>
                 </div>
                 <ChevronRight className="w-3 h-3 text-muted-foreground ml-auto" />
               </div>

@@ -41,6 +41,14 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
     );
   }
 
+  // Gather all detected critical/urgent phrases
+  const detectedPhrases = call.transcript
+    .flatMap((line) => {
+      const list = line.keywords?.length ? line.keywords : DEFAULT_KEYWORDS;
+      return list.filter((k) => line.text.toLowerCase().includes(k.toLowerCase()));
+    })
+    .filter((v, i, arr) => arr.indexOf(v) === i); // unique
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -57,6 +65,17 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
         </div>
         <span className="text-[10px] font-mono text-muted-foreground">{call.id.toUpperCase()}</span>
       </div>
+
+      {/* AI assistive info */}
+      <div className="px-4 py-2 bg-accent/20 text-xs text-muted-foreground border-b border-border">
+        <strong>Note:</strong> AI is only assisting by highlighting and structuring information. All decisions and communication are made by the dispatcher.
+      </div>
+
+      {detectedPhrases.length > 0 && (
+        <div className="px-4 py-2 bg-warning/10 text-warning-foreground text-xs border-b border-warning">
+          <strong>Critical phrases detected:</strong> {detectedPhrases.join(', ')}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
         {call.transcript.map((line, index) => (
