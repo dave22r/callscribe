@@ -295,11 +295,14 @@ const Index = () => {
                   size="sm"
                   variant="outline"
                   onClick={handleUnmute}
-                  disabled={liveScribe.isConnecting || liveScribe.isConnected}
-                  className="ml-2"
+                  disabled={liveScribe.isConnecting || liveScribe.isConnected || liveScribe.isPlaying}
+                  className="ml-2 relative overflow-hidden"
                 >
                   <Mic className="w-3.5 h-3.5 mr-1.5" />
-                  Unmute operator
+                  {liveScribe.isPlaying ? 'Receiving Audio...' : 'Unmute operator'}
+                  {liveScribe.isPlaying && (
+                    <span className="absolute inset-0 bg-blue-500/10 animate-pulse" />
+                  )}
                 </Button>
                 <Button
                   size="sm"
@@ -308,7 +311,7 @@ const Index = () => {
                   disabled={!liveScribe.isConnected}
                 >
                   <MicOff className="w-3.5 h-3.5 mr-1.5" />
-                  Mute operator
+                  Mute
                 </Button>
                 {callerLink && (
                   <Link to={callerLink} className="ml-2">

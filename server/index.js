@@ -62,6 +62,11 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('call-partial', payload);
     });
 
+    socket.on('audio-message', (payload) => {
+        // Broadcast audio chunk/blob to other clients
+        socket.broadcast.emit('audio-message', payload);
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
     });

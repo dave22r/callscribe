@@ -45,7 +45,8 @@ class SocketService {
             'recording-complete',
             'call-status',
             'call-updated',
-            'call-partial'
+            'call-partial',
+            'audio-message'
         ];
 
         events.forEach(event => {
@@ -53,6 +54,8 @@ class SocketService {
                 const listeners = this.listeners.get(event);
                 if (listeners) {
                     listeners.forEach(callback => callback(data));
+                } else {
+                    console.warn(`[Socket] ⚠️ No listeners for event: ${event}`);
                 }
             });
         });

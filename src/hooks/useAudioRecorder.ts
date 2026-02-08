@@ -11,19 +11,27 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
     const audioChunksRef = useRef<Blob[]>([]);
     const isRecordingRef = useRef(false);
 
-    // Queue for incoming audio to be played on unmute
+    // Queue for incoming audio to be played immediately
     const playbackQueueRef = useRef<ArrayBuffer[]>([]);
     const isPlayingRef = useRef(false);
+    const [isPlaying, setIsPlaying] = useState(false); // Exposed state for UI lock
 
     const playNextInQueue = useCallback(async () => {
         if (playbackQueueRef.current.length === 0) {
+            isPlayingRef.current = false;
+            setIsPlaying(false);
             return;
         }
 
         isPlayingRef.current = true;
+        setIsPlaying(true);
         const audioData = playbackQueueRef.current.shift();
 
-        if (!audioData) return;
+        if (!audioData) {
+            isPlayingRef.current = false;
+            setIsPlaying(false);
+            return;
+        }
 
         return new Promise<void>((resolve) => {
             try {
@@ -56,15 +64,17 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
     }, []);
 
     const startRecording = useCallback(async () => {
+        // 🔒 PTT LOCK: Cannot record if someone else is speaking
+        if (isPlayingRef.current) {
+            console.warn('⚠️ Cannot record while incoming audio is playing');
+            return;
+        }
+
         try {
             if (isRecordingRef.current) return;
 
-            // 1. Play queued audio first
-            if (playbackQueueRef.current.length > 0) {
-                console.log('⏳ Waiting for incoming audio to finish before recording...');
-                await playNextInQueue();
-                isPlayingRef.current = false;
-            }
+            // 1. Play queued audio first (REMOVED: Now we play immediately on receive)
+            // if (playbackQueueRef.current.length > 0) { ... }
 
             // 2. Start Microphone
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -130,12 +140,14 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
         if (data.callSid !== callIdRef.current) return;
         if (data.speaker === role) return; // Ignore own voice
 
-        console.log(`📥 Received audio from ${data.speaker}. Queueing...`);
+        // console.log(`📥 Received audio from ${data.speaker}. Playing immediately...`);
         playbackQueueRef.current.push(data.audio);
 
-        // If we are MUTED (not recording), maybe we should notify user?
-        // But per request, we only play when they UNMUTE.
-    }, [role, callIdRef]);
+        // IMMEDIATE PLAYBACK: If not currently playing, start the queue
+        if (!isPlayingRef.current) {
+            playNextInQueue();
+        }
+    }, [role, callIdRef, playNextInQueue]);
 
     // Subscribe to socket events
     useEffect(() => {
@@ -147,7 +159,8 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
 
     return {
         startRecording,
-        stopRecording
+        stopRecording,
+        isPlaying // Expose lock state
     };
 }
 

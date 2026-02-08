@@ -149,11 +149,14 @@ const Caller = () => {
                 <div className="flex items-center gap-3">
                     <Button
                         onClick={handleUnmute}
-                        disabled={liveScribe.isConnecting || isLive}
-                        className="bg-red-500 hover:bg-red-600"
+                        disabled={liveScribe.isConnecting || isLive || liveScribe.isPlaying}
+                        className="bg-red-500 hover:bg-red-600 relative overflow-hidden"
                     >
                         <Mic className="w-4 h-4 mr-2" />
-                        Unmute
+                        {liveScribe.isPlaying ? 'Receiving...' : 'Unmute'}
+                        {liveScribe.isPlaying && (
+                            <span className="absolute inset-0 bg-blue-500/20 animate-pulse" />
+                        )}
                     </Button>
                     <Button
                         onClick={handleMute}
@@ -167,8 +170,8 @@ const Caller = () => {
                 </div>
 
                 <div className="text-center space-y-1">
-                    <p className={`text-sm font-bold transition-colors ${isLive ? 'text-red-500' : 'text-slate-300'}`}>
-                        {isLive ? 'Your mic is LIVE' : 'Mic is muted'}
+                    <p className={`text-sm font-bold transition-colors ${isLive ? 'text-red-500' : liveScribe.isPlaying ? 'text-blue-400' : 'text-slate-300'}`}>
+                        {isLive ? 'Your mic is LIVE' : liveScribe.isPlaying ? 'Receiving Audio...' : 'Mic is muted'}
                     </p>
                     <p className="text-slate-500 text-[10px] max-w-[240px] uppercase font-bold tracking-tight">
                         You control when audio is shared

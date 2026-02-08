@@ -742,6 +742,65 @@
       "transcript": [],
       "tags": [],
       "updatedAt": "2026-02-08T06:29:54.190Z"
+    },
+    {
+      "id": "call-1770535832783",
+      "callSid": "call-1770535832783",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "critical",
+      "status": "queued",
+      "summary": "The patient's communication is not coherent, indicating potential distress or confusion.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 25,
+      "timestamp": "2026-02-08T07:30:32.784Z",
+      "duration": 41,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Pretty much hey hey hey",
+          "timestamp": "00:40 "
+        }
+      ],
+      "tags": [
+        "hey hey hey"
+      ],
+      "updatedAt": "2026-02-08T07:31:23.843Z"
+    },
+    {
+      "id": "call-1770536333751",
+      "callSid": "call-1770536333751",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "critical",
+      "status": "queued",
+      "summary": "The patient has a broken leg and is experiencing heavy breathing and significant bleeding, indicating a critical situation that requires immediate medical attention.",
+      "symptoms": [
+        "broken leg",
+        "heavy breathing",
+        "bleeding"
+      ],
+      "patientType": "Unknown",
+      "confidence": 95,
+      "timestamp": "2026-02-08T07:38:53.751Z",
+      "duration": 19,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hey there, can you please come quick? I just broke my leg. I'm breathing pretty heavily and bleeding everywhere.",
+          "timestamp": "00:18 "
+        }
+      ],
+      "tags": [
+        "broken leg",
+        "bleeding",
+        "breathing heavily",
+        "come quick"
+      ],
+      "updatedAt": "2026-02-08T07:39:23.190Z"
     }
   ]
 }

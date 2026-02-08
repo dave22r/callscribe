@@ -40,7 +40,7 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
     const activeCallId = useRef<string | null>(null);
 
     // Audio Recorder for Walkie-Talkie mode
-    const { startRecording, stopRecording } = useAudioRecorder({
+    const { startRecording, stopRecording, isPlaying } = useAudioRecorder({
         role,
         callIdRef: activeCallId
     });
@@ -278,5 +278,6 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
         setCallId,
         activeCallId: activeCallId.current,
         startTime,
+        isPlaying // Walkie-Talkie receive state
     };
 }
