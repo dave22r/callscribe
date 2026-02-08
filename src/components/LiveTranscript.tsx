@@ -53,43 +53,47 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
-        {call.transcript.map((line, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08 }}
-            className={`flex gap-3 ${line.speaker === 'caller' ? '' : 'flex-row-reverse'}`}
-          >
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-              line.speaker === 'operator' ? 'bg-primary/15' : 'bg-accent'
-            }`}>
-              {line.speaker === 'operator' ? (
-                <Zap className="w-3 h-3 text-primary" />
-              ) : (
-                <User className="w-3 h-3 text-muted-foreground" />
-              )}
-            </div>
-
-            <div className={`max-w-[80%] ${line.speaker === 'caller' ? '' : 'text-right'}`}>
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase">
-                  {line.speaker}
-                </span>
-                <span className="text-[10px] font-mono text-muted-foreground/50">
-                  {line.timestamp}
-                </span>
+        {call.transcript.map((line, index) => {
+          // Debugging log for last item (most likely to be the active one)
+          if (index === call.transcript.length - 1) {
+            console.log(`🖼️ Rendering line ${index}:`, { text: line.text, speaker: line.speaker });
+          }
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              className={`flex gap-3 ${line.speaker === 'caller' ? '' : 'flex-row-reverse'}`}
+            >
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${line.speaker === 'operator' ? 'bg-primary/15' : 'bg-accent'
+                }`}>
+                {line.speaker === 'operator' ? (
+                  <Zap className="w-3 h-3 text-primary" />
+                ) : (
+                  <User className="w-3 h-3 text-muted-foreground" />
+                )}
               </div>
-              <p className={`text-sm leading-relaxed rounded-lg px-3 py-2 ${
-                line.speaker === 'operator'
+
+              <div className={`max-w-[80%] ${line.speaker === 'caller' ? '' : 'text-right'}`}>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-mono text-muted-foreground uppercase">
+                    {line.speaker}
+                  </span>
+                  <span className="text-[10px] font-mono text-muted-foreground/50">
+                    {line.timestamp}
+                  </span>
+                </div>
+                <p className={`text-sm leading-relaxed rounded-lg px-3 py-2 ${line.speaker === 'operator'
                   ? 'bg-primary/10 text-foreground'
                   : 'bg-accent text-foreground'
-              }`}>
-                {highlightKeywords(line.text, line.keywords)}
-              </p>
-            </div>
-          </motion.div>
-        ))}
+                  }`}>
+                  {highlightKeywords(line.text, line.keywords)}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
 
         {call.status === 'active' && (
           <motion.div

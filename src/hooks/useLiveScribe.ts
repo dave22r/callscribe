@@ -24,6 +24,8 @@ export function useLiveScribe() {
     const currentSpeakerRef = useRef<'caller' | 'operator'>('caller');
     const [partialText, setPartialText] = useState('');
 
+    // Track text that has been manually committed (to prevent double-counting)
+    const lastCommittedTextRef = useRef('');
     // Track the active call ID relative to the backend
     const activeCallId = useRef<string | null>(null);
 
@@ -41,32 +43,43 @@ export function useLiveScribe() {
         modelId: 'scribe_v2_realtime',
         onPartialTranscript: (data) => {
             if (data?.text) {
-                setPartialText(data.text);
+                // Only show text that hasn't been manually committed yet
+                const fullText = data.text;
+                const newText = fullText.slice(lastCommittedTextRef.current.length);
+                setPartialText(newText);
             }
         },
         onCommittedTranscript: async (data: { text: string }) => {
             if (!data.text?.trim()) return;
 
+            // Get only the part of the text that wasn't already committed manually
+            const fullText = data.text.trim();
+            const newText = fullText.slice(lastCommittedTextRef.current.length).trim();
+
+            lastCommittedTextRef.current = ''; // Reset for next segment
+
+            if (!newText) {
+                setPartialText('');
+                return;
+            }
+
             console.log('📝 Processing commit. Current Ref Speaker:', currentSpeakerRef.current);
 
             const elapsed = startTime != null ? (Date.now() - startTime) / 1000 : 0;
             const newLine: TranscriptLine = {
-                speaker: currentSpeakerRef.current, // Use ref to avoid stale closure
-                text: data.text.trim(),
+                speaker: currentSpeakerRef.current,
+                text: newText,
                 timestamp: formatTimestamp(elapsed),
             };
 
             setLines((prev) => {
                 const newLines = [...prev, newLine];
-
-                // Sync to backend if we have a call ID
                 if (activeCallId.current) {
                     callsApi.updateCall(activeCallId.current, {
                         transcript: newLines,
-                        duration: Math.ceil(elapsed) // Update duration too
+                        duration: Math.ceil(elapsed)
                     }).catch(e => console.error("Failed to sync transcript", e));
                 }
-
                 return newLines;
             });
             setPartialText('');
@@ -78,6 +91,7 @@ export function useLiveScribe() {
         setTokenError(null);
         setLines([]);
         setPartialText('');
+        lastCommittedTextRef.current = '';
         const now = Date.now();
         setStartTime(now);
 
@@ -153,13 +167,40 @@ export function useLiveScribe() {
     }, [scribe]);
 
     const toggleSpeaker = useCallback(() => {
+        // Manual commit of current partial text to the current speaker BEFORE switching
+        const textToCommit = partialText.trim();
+
+        if (textToCommit) {
+            console.log('✂️ Manually splitting at toggle. Committing to:', currentSpeakerRef.current);
+            const elapsed = startTime != null ? (Date.now() - startTime) / 1000 : 0;
+            const splitLine: TranscriptLine = {
+                speaker: currentSpeakerRef.current,
+                text: textToCommit,
+                timestamp: formatTimestamp(elapsed),
+            };
+
+            setLines(prev => {
+                const newLines = [...prev, splitLine];
+                if (activeCallId.current) {
+                    callsApi.updateCall(activeCallId.current, { transcript: newLines })
+                        .catch(e => console.error("Failed to sync split transcript", e));
+                }
+                return newLines;
+            });
+
+            // Mark this text as committed so onCommittedTranscript doesn't double-add it
+            // We use the "full" text from Scribe which we approximate by what we already have
+            lastCommittedTextRef.current += textToCommit + " ";
+            setPartialText('');
+        }
+
         setCurrentSpeaker(prev => {
             const next = prev === 'caller' ? 'operator' : 'caller';
             console.log('🔀 Toggling speaker to:', next);
             currentSpeakerRef.current = next; // Update ref immediately
             return next;
         });
-    }, []);
+    }, [partialText, startTime]);
 
     return {
         transcript: lines,

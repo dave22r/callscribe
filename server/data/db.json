@@ -275,6 +275,175 @@
       ],
       "tags": [],
       "updatedAt": "2026-02-08T02:50:33.390Z"
+    },
+    {
+      "id": "call-1770519118730",
+      "callSid": "call-1770519118730",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The patient reports pain in their arm. No life-threatening symptoms or severe conditions indicated.",
+      "symptoms": [
+        "arm pain"
+      ],
+      "patientType": "Unknown",
+      "confidence": 60,
+      "timestamp": "2026-02-08T02:51:58.734Z",
+      "duration": 0,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hello. Like, describe the condition and I'll do it. Um, hello, my arm hurts.",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [
+        "arm hurts"
+      ],
+      "updatedAt": "2026-02-08T02:52:16.956Z"
+    },
+    {
+      "id": "call-1770519509854",
+      "callSid": "call-1770519509854",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "critical",
+      "status": "queued",
+      "summary": "The call lacks any identifiable emergency context or patient details.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 20,
+      "timestamp": "2026-02-08T02:58:29.858Z",
+      "duration": 0,
+      "transcript": [
+        {
+          "speaker": "operator",
+          "text": "Hello hello hello hello hello",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [
+        "hello"
+      ],
+      "updatedAt": "2026-02-08T02:58:43.145Z"
+    },
+    {
+      "id": "call-1770519606375",
+      "callSid": "call-1770519606375",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The operator is making greetings with no indication of an emergency or specific situation.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 70,
+      "timestamp": "2026-02-08T03:00:06.375Z",
+      "duration": 0,
+      "transcript": [
+        {
+          "speaker": "operator",
+          "text": "Hey there, hello, hello, hi, hello, hello, hello,",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [],
+      "updatedAt": "2026-02-08T03:00:19.791Z"
+    },
+    {
+      "id": "call-1770519795020",
+      "callSid": "call-1770519795020",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "stable",
+      "status": "queued",
+      "summary": "The patient appears to be disoriented and is asking if the operator is okay.",
+      "symptoms": [],
+      "patientType": "Unknown",
+      "confidence": 50,
+      "timestamp": "2026-02-08T03:03:15.020Z",
+      "duration": 8,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hello hello hello.",
+          "timestamp": "00:05"
+        },
+        {
+          "speaker": "operator",
+          "text": ". Hi, hello, hello.",
+          "timestamp": "00:10"
+        },
+        {
+          "speaker": "caller",
+          "text": "Are you okay? Are you okay?",
+          "timestamp": "00:23"
+        },
+        {
+          "speaker": "operator",
+          "text": "I'm okay, hello. Hello, what's going on?",
+          "timestamp": "00:29"
+        },
+        {
+          "speaker": "caller",
+          "text": "ng on.)",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [
+        "hello",
+        "okay"
+      ],
+      "updatedAt": "2026-02-08T03:03:48.504Z"
+    },
+    {
+      "id": "call-1770519844057",
+      "callSid": "call-1770519844057",
+      "callerName": "Unknown",
+      "phone": "Unknown",
+      "location": "Unknown",
+      "urgency": "urgent",
+      "status": "queued",
+      "summary": "The patient reports severe leg pain but has not provided specific details about the incident or their condition.",
+      "symptoms": [
+        "leg pain"
+      ],
+      "patientType": "Unknown",
+      "confidence": 70,
+      "timestamp": "2026-02-08T03:04:04.057Z",
+      "duration": 6,
+      "transcript": [
+        {
+          "speaker": "caller",
+          "text": "Hello? Okay. Okay. See you. Just update.",
+          "timestamp": "00:09"
+        },
+        {
+          "speaker": "operator",
+          "text": ", switch it. Hello, how are you?",
+          "timestamp": "00:14"
+        },
+        {
+          "speaker": "caller",
+          "text": "Say something. My leg hurts. Unless you say something, it just shows the whole, like, I don't know why.",
+          "timestamp": "00:25"
+        },
+        {
+          "speaker": "operator",
+          "text": "Okay.",
+          "timestamp": "--:--"
+        }
+      ],
+      "tags": [
+        "leg hurts",
+        "urgent"
+      ],
+      "updatedAt": "2026-02-08T03:04:35.284Z"
     }
   ]
 }
