@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsBar from '@/components/StatsBar';
@@ -10,10 +11,10 @@ import { useLiveScribe } from '@/hooks/useLiveScribe';
 import { useCalls } from '@/hooks/useCalls';
 import type { EmergencyCall } from '@/data/mockCalls';
 import { Button } from '@/components/ui/button';
-import { Mic, Square } from 'lucide-react';
+import { Mic, MicOff, Square, Link2 } from 'lucide-react';
 
 const Index = () => {
-  const { calls, addCall, updateCall, getCall } = useCalls();
+  const { calls, addCall, updateCall, getCall, getPartial } = useCalls();
   const [selectedCallId, setSelectedCallId] = useState<string | null>(calls[0]?.id ?? null);
   const [activeLiveCallId, setActiveLiveCallId] = useState<string | null>(null);
   const liveScribe = useLiveScribe();
@@ -37,98 +38,97 @@ const Index = () => {
         });
       }
 
-      updateCall(activeLiveCallId, {
-        transcript: currentTranscript,
-        duration: liveScribe.transcript.length * 2,
-      });
-    }
-  }, [activeLiveCallId, liveScribe.transcript, liveScribe.partialTranscript, liveScribe.isConnected, liveScribe.currentSpeaker, updateCall]);
+    return {
+      ...base,
+      transcript,
+    } as EmergencyCall;
+  }, [activeCall, selectedCall, liveScribe.partialTranscript, liveScribe.role, activeLiveCallId, getPartial]);
 
-  const selectedCall = getCall(selectedCallId);
-  const displayCall = selectedCall;
-
-  const handleStartLive = useCallback(async () => {
-    // Create a new call entry using useCalls (frontend)
+  const handleStartLive = useCallback(() => {
     const newCall = addCall([]);
 
-    // Set initial metadata
     updateCall(newCall.id, {
-      callerName: 'Live Call...',
+      callerName: 'Live Caller',
       status: 'active',
       urgency: 'stable',
-      summary: 'Listening...',
+      summary: 'Live call in progress...',
       confidence: 0,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     setSelectedCallId(newCall.id);
     setActiveLiveCallId(newCall.id);
+  }, [addCall, updateCall]);
 
-    // Start scribe with the specific Call ID
-    await liveScribe.start(newCall.id);
-  }, [liveScribe, addCall, updateCall]);
+  const handleUnmute = useCallback(async () => {
+    if (!activeLiveCallId) return;
+    await liveScribe.unmute(activeLiveCallId);
+  }, [activeLiveCallId, liveScribe]);
+
+  const handleMute = useCallback(() => {
+    liveScribe.mute();
+  }, [liveScribe]);
 
   const handleStopLive = useCallback(async () => {
+    if (!activeLiveCallId) return;
+
     await liveScribe.stop();
 
-    if (activeLiveCallId) {
-      // Finalize transcript
-      let transcriptLines = [...liveScribe.transcript];
-      if (liveScribe.partialTranscript?.trim()) {
-        transcriptLines.push({
-          speaker: liveScribe.currentSpeaker,
-          text: liveScribe.partialTranscript,
-          timestamp: '--:--',
-        });
-      }
+    const currentCall = getCall(activeLiveCallId);
+    const transcriptLines = currentCall?.transcript ? [...currentCall.transcript] : [];
 
-      // Update call to processing state
-      updateCall(activeLiveCallId, {
-        status: 'processing',
-        summary: 'Analyzing call...',
-        transcript: transcriptLines
+    if (liveScribe.partialTranscript?.trim()) {
+      transcriptLines.push({
+        speaker: liveScribe.role,
+        text: liveScribe.partialTranscript,
+        timestamp: '--:--',
       });
+    }
 
-      if (transcriptLines.length > 0) {
-        try {
-          const fullConversation = transcriptLines
-            .map(line => `${line.speaker === 'caller' ? 'Patient' : 'Operator'}: ${line.text}`)
-            .join('\n');
+    updateCall(activeLiveCallId, {
+      status: 'processing',
+      summary: 'Analyzing call...',
+      transcript: transcriptLines,
+    });
 
-          // Call backend for analysis
-          const response = await fetch('/api/calls/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript: fullConversation })
+    if (transcriptLines.length > 0) {
+      try {
+        const fullConversation = transcriptLines
+          .map(line => `${line.speaker === 'caller' ? 'Patient' : 'Operator'}: ${line.text}`)
+          .join('\n');
+
+        const response = await fetch('/api/calls/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: fullConversation })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.analysis) {
+          const { analysis } = data;
+
+          updateCall(activeLiveCallId, {
+            callerName: analysis.patientName || 'Unknown Patient',
+            patientType: analysis.patientType || 'Unknown',
+            urgency: analysis.urgency || 'stable',
+            symptoms: analysis.symptoms || [],
+            location: analysis.location || 'Unknown',
+            summary: analysis.summary || 'Call processed',
+            status: 'queued',
+            confidence: analysis.confidence || 85,
+            tags: analysis.keywords
           });
-
-          const data = await response.json();
-
-          if (data.success && data.analysis) {
-            const { analysis } = data;
-
-            updateCall(activeLiveCallId, {
-              callerName: analysis.patientName || 'Unknown Patient',
-              patientType: analysis.patientType || 'Unknown',
-              urgency: analysis.urgency || 'stable',
-              symptoms: analysis.symptoms || [],
-              location: analysis.location || 'Unknown',
-              summary: analysis.summary || 'Call processed',
-              status: 'queued',
-              confidence: analysis.confidence || 85,
-              tags: analysis.keywords
-            });
-          } else {
-            // Fallback
-            updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed (backend error).' });
-          }
-        } catch (error) {
-          console.error('Analysis failed', error);
-          updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed (Network Error).' });
+        } else {
+          updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed (backend error).' });
         }
-      } else {
-        updateCall(activeLiveCallId, { status: 'queued', summary: 'Empty call' });
+      } catch (error) {
+        console.error('Analysis failed', error);
+        updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed (Network Error).' });
       }
+    } else {
+      updateCall(activeLiveCallId, { status: 'queued', summary: 'Empty call' });
+    }
 
       setActiveLiveCallId(null);
     }
@@ -162,8 +162,6 @@ const Index = () => {
       <DashboardHeader pendingCallCount={pendingCallCount} />
       <StatsBar />
 
-
-
       <div className="flex-1 grid grid-cols-[280px_1fr_320px] min-h-0">
         {/* Call Queue */}
         <div className="border-r border-border overflow-hidden flex flex-col">
@@ -190,22 +188,41 @@ const Index = () => {
                 onClick={handleStartLive}
               >
                 <Mic className="w-3.5 h-3.5 mr-1.5" />
-                Start live transcription
+                Start shared call
               </Button>
             ) : (
               <>
                 <Button size="sm" variant="destructive" onClick={handleStopLive}>
                   <Square className="w-3.5 h-3.5 mr-1.5" />
-                  Stop & save
+                  End call
                 </Button>
                 <Button
                   size="sm"
-                  variant={liveScribe.currentSpeaker === 'operator' ? 'default' : 'outline'}
-                  onClick={liveScribe.toggleSpeaker}
+                  variant="outline"
+                  onClick={handleUnmute}
+                  disabled={liveScribe.isConnecting || liveScribe.isConnected}
                   className="ml-2"
                 >
-                  {liveScribe.currentSpeaker === 'operator' ? '👨‍⚕️ Operator' : '🤒 Patient'}
+                  <Mic className="w-3.5 h-3.5 mr-1.5" />
+                  Unmute operator
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleMute}
+                  disabled={!liveScribe.isConnected}
+                >
+                  <MicOff className="w-3.5 h-3.5 mr-1.5" />
+                  Mute operator
+                </Button>
+                {callerLink && (
+                  <Link to={callerLink} className="ml-2">
+                    <Button size="sm" variant="secondary">
+                      <Link2 className="w-3.5 h-3.5 mr-1.5" />
+                      Open caller view
+                    </Button>
+                  </Link>
+                )}
               </>
             )}
             {liveScribe.error && (

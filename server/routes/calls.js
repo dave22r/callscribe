@@ -117,6 +117,51 @@ router.patch('/:callSid', async (req, res) => {
 });
 
 /**
+ * Append a transcript line to a call
+ */
+router.post('/:callSid/transcript', async (req, res) => {
+    try {
+        const db = getDB();
+        if (!db) return res.status(500).json({ error: 'Database not connected' });
+
+        const { line, duration } = req.body;
+        if (!line || !line.text) {
+            return res.status(400).json({ error: 'Transcript line is required' });
+        }
+
+        const call = await db.collection('calls').findOne({ callSid: req.params.callSid });
+        if (!call) {
+            return res.status(404).json({ error: 'Call not found' });
+        }
+
+        if (!Array.isArray(call.transcript)) {
+            call.transcript = [];
+        }
+
+        call.transcript.push(line);
+        if (typeof duration === 'number') {
+            call.duration = duration;
+        }
+
+        call.updatedAt = new Date();
+        await db.save();
+
+        const io = req.app.get('io');
+        io.emit('call-updated', {
+            callSid: req.params.callSid,
+            transcript: call.transcript,
+            duration: call.duration,
+            updatedAt: call.updatedAt
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error appending transcript:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
  * Analyze call transcript with AI
  */
 router.post('/analyze', async (req, res) => {

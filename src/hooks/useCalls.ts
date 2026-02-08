@@ -6,6 +6,7 @@ import { socketService } from '@/services/socket';
 export function useCalls() {
     const [calls, setCalls] = useState<EmergencyCall[]>([]);
     const [loading, setLoading] = useState(true);
+    const [partials, setPartials] = useState<Record<string, TranscriptLine | null>>({});
 
     const fetchCalls = useCallback(async () => {
         try {
@@ -44,6 +45,9 @@ export function useCalls() {
     useEffect(() => {
         fetchCalls();
 
+        // Ensure socket is connected for real-time updates
+        socketService.connect();
+
         const handleUpdate = (updatedCall: any) => {
             setCalls(prev => prev.map(c => c.id === updatedCall.callSid ? { ...c, ...updatedCall } : c));
         };
@@ -52,12 +56,33 @@ export function useCalls() {
             fetchCalls();
         };
 
+        const handlePartial = (payload: any) => {
+            if (!payload?.callSid || !payload?.speaker) return;
+
+            const text = typeof payload.text === 'string' ? payload.text : '';
+            if (!text.trim()) {
+                setPartials(prev => ({ ...prev, [payload.callSid]: null }));
+                return;
+            }
+
+            setPartials(prev => ({
+                ...prev,
+                [payload.callSid]: {
+                    speaker: payload.speaker,
+                    text,
+                    timestamp: '--:--'
+                }
+            }));
+        };
+
         socketService.on('call-updated', handleUpdate);
         socketService.on('incoming-call', handleIncoming);
+        socketService.on('call-partial', handlePartial);
 
         return () => {
             socketService.off('call-updated', handleUpdate);
             socketService.off('incoming-call', handleIncoming);
+            socketService.off('call-partial', handlePartial);
         };
     }, [fetchCalls]);
 
@@ -112,11 +137,17 @@ export function useCalls() {
         return calls.find(c => c.id === id) || null;
     }, [calls]);
 
+    const getPartial = useCallback((id: string | null) => {
+        if (!id) return null;
+        return partials[id] || null;
+    }, [partials]);
+
     return {
         calls,
         loading,
         addCall,
         updateCall,
-        getCall
+        getCall,
+        getPartial
     };
 }
