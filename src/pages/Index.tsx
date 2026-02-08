@@ -30,6 +30,13 @@ const Index = () => {
     setRightPanelTab('triage');
   }, []);
 
+  // Sync selected call ID with LiveScribe to allow listening to audio
+  useEffect(() => {
+    if (selectedCallId) {
+      liveScribe.setCallId(selectedCallId);
+    }
+  }, [selectedCallId, liveScribe]);
+
   const pendingCallCount = useMemo(() => {
     return calls.filter(call => call.status === 'active' || call.status === 'queued').length;
   }, [calls]);
@@ -333,8 +340,8 @@ const Index = () => {
             <button
               onClick={() => setRightPanelTab('triage')}
               className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${rightPanelTab === 'triage'
-                  ? 'bg-accent text-accent-foreground border-b-2 border-primary'
-                  : 'text-muted-foreground hover:bg-accent/50'
+                ? 'bg-accent text-accent-foreground border-b-2 border-primary'
+                : 'text-muted-foreground hover:bg-accent/50'
                 }`}
             >
               AI Triage
@@ -342,8 +349,8 @@ const Index = () => {
             <button
               onClick={() => setRightPanelTab('fleet')}
               className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${rightPanelTab === 'fleet'
-                  ? 'bg-accent text-accent-foreground border-b-2 border-primary'
-                  : 'text-muted-foreground hover:bg-accent/50'
+                ? 'bg-accent text-accent-foreground border-b-2 border-primary'
+                : 'text-muted-foreground hover:bg-accent/50'
                 }`}
             >
               Fleet Status

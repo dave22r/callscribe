@@ -235,6 +235,11 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
         await start({ callId });
     }, [start]);
 
+    const setCallId = useCallback((callId: string | null) => {
+        activeCallId.current = callId;
+        // Also verify if we need to sync transcript logic here, but for now just validation
+    }, []);
+
     const mute = useCallback(() => {
         commitPartial();
         emitPartial('');
@@ -270,6 +275,7 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
         stop,
         mute,
         unmute,
+        setCallId,
         activeCallId: activeCallId.current,
         startTime,
     };
