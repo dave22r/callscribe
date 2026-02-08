@@ -75,7 +75,8 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
             <span className="text-[11px] font-mono uppercase">Patient</span>
           </div>
           <div className="pl-5">
-            <p className="text-sm font-medium">{call.patientType}</p>
+            <p className="text-sm font-medium">{call.callerName}</p>
+            <p className="text-xs text-muted-foreground">{call.patientType}</p>
           </div>
         </div>
 
@@ -101,7 +102,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
               <span
                 key={symptom}
                 className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${call.urgency === 'critical' ? 'bg-critical/10 text-critical' :
-                    call.urgency === 'urgent' ? 'bg-urgent/10 text-urgent' : 'bg-stable/10 text-stable'
+                  call.urgency === 'urgent' ? 'bg-urgent/10 text-urgent' : 'bg-stable/10 text-stable'
                   }`}
               >
                 {symptom}
@@ -119,9 +120,9 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
         {/* Dispatcher Actions */}
         <div className="pt-2 space-y-2">
           <p className="text-[10px] font-mono text-muted-foreground uppercase">Dispatcher Actions</p>
-          
+
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowOverrideOptions(!showOverrideOptions)}
               disabled={!onOverride}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:bg-accent/80 transition-colors border border-border disabled:opacity-50 disabled:cursor-not-allowed"
@@ -129,7 +130,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
               <XCircle className="w-3.5 h-3.5" />
               Override Urgency
             </button>
-            
+
             {showOverrideOptions && onOverride && (
               <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg overflow-hidden z-10">
                 <button
@@ -161,7 +162,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
           </div>
 
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowAmbulanceOptions(!showAmbulanceOptions)}
               disabled={!onDispatch || availableAmbulances.length === 0}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-critical/20 text-critical text-xs font-medium hover:bg-critical/30 transition-colors border border-critical/30 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -169,7 +170,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
               <Truck className="w-3.5 h-3.5" />
               Dispatch Ambulance
             </button>
-            
+
             {showAmbulanceOptions && onDispatch && availableAmbulances.length > 0 && (
               <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
                 {availableAmbulances.map((amb) => (
@@ -190,7 +191,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
             )}
           </div>
 
-          <button 
+          <button
             onClick={onResolve}
             disabled={!onResolve}
             className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-stable/20 text-stable text-xs font-medium hover:bg-stable/30 transition-colors border border-stable/30 disabled:opacity-50 disabled:cursor-not-allowed"
