@@ -21,7 +21,7 @@ const Index = () => {
   const [activeLiveCallId, setActiveLiveCallId] = useState<string | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'triage' | 'fleet'>('triage');
   const [ambulances, setAmbulances] = useState<Ambulance[]>(mockAmbulances);
-  const liveScribe = useLiveScribe();
+  const liveScribe = useLiveScribe({ fixedRole: 'operator' });
 
   // Auto-switch to triage tab when a call is selected
   const handleSelectCall = useCallback((callId: string) => {
@@ -40,12 +40,12 @@ const Index = () => {
   const avgResponseTime = useMemo(() => {
     const dispatchedCalls = calls.filter(call => call.status === 'dispatched' && call.dispatchedAt);
     if (dispatchedCalls.length === 0) return '0 min';
-    
+
     const totalResponseTime = dispatchedCalls.reduce((sum, call) => {
       const responseTime = new Date(call.dispatchedAt!).getTime() - new Date(call.timestamp).getTime();
       return sum + responseTime;
     }, 0);
-    
+
     const avgMillis = totalResponseTime / dispatchedCalls.length;
     const avgMinutes = Math.round(avgMillis / 60000);
     return avgMinutes > 0 ? `${avgMinutes} min` : '< 1 min';
@@ -54,12 +54,12 @@ const Index = () => {
   const dispatchDelay = useMemo(() => {
     const queuedCalls = calls.filter(call => call.status === 'queued');
     if (queuedCalls.length === 0) return '0 min';
-    
+
     const totalWaitTime = queuedCalls.reduce((sum, call) => {
       const elapsed = Date.now() - new Date(call.timestamp).getTime();
       return sum + elapsed;
     }, 0);
-    
+
     const avgMillis = totalWaitTime / queuedCalls.length;
     const avgMinutes = Math.round(avgMillis / 60000);
     return avgMinutes > 0 ? `${avgMinutes} min` : '< 1 min';
@@ -190,17 +190,17 @@ const Index = () => {
     (callId: string, ambulanceId: string) => {
       const call = getCall(callId);
       updateCall(callId, { status: 'dispatched', dispatchedAt: new Date() });
-      
+
       // Update ambulance status to en-route
-      setAmbulances(prev => prev.map(amb => 
-        amb.id === ambulanceId 
-          ? { 
-              ...amb, 
-              status: 'en-route' as const, 
-              assignedCall: callId,
-              location: `En route to ${call?.location || 'caller'}`,
-              eta: Math.floor(Math.random() * 10) + 3 // Random ETA 3-12 min
-            }
+      setAmbulances(prev => prev.map(amb =>
+        amb.id === ambulanceId
+          ? {
+            ...amb,
+            status: 'en-route' as const,
+            assignedCall: callId,
+            location: `En route to ${call?.location || 'caller'}`,
+            eta: Math.floor(Math.random() * 10) + 3 // Random ETA 3-12 min
+          }
           : amb
       ));
     },
@@ -210,17 +210,17 @@ const Index = () => {
   const handleResolve = useCallback(
     (callId: string) => {
       updateCall(callId, { status: 'resolved', resolvedAt: new Date() });
-      
+
       // Find and release the ambulance assigned to this call
-      setAmbulances(prev => prev.map(amb => 
-        amb.assignedCall === callId 
-          ? { 
-              ...amb, 
-              status: 'available' as const, 
-              assignedCall: undefined,
-              location: amb.location.includes('En route') ? 'Station' : amb.location,
-              eta: undefined
-            }
+      setAmbulances(prev => prev.map(amb =>
+        amb.assignedCall === callId
+          ? {
+            ...amb,
+            status: 'available' as const,
+            assignedCall: undefined,
+            location: amb.location.includes('En route') ? 'Station' : amb.location,
+            eta: undefined
+          }
           : amb
       ));
     },
@@ -234,7 +234,7 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <DashboardHeader pendingCallCount={pendingCallCount} />
-      <StatsBar 
+      <StatsBar
         activeCallsCount={activeCallsCount}
         avgResponseTime={avgResponseTime}
         dispatchDelay={dispatchDelay}
@@ -319,21 +319,19 @@ const Index = () => {
           <div className="flex border-b border-border">
             <button
               onClick={() => setRightPanelTab('triage')}
-              className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                rightPanelTab === 'triage'
+              className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${rightPanelTab === 'triage'
                   ? 'bg-accent text-accent-foreground border-b-2 border-primary'
                   : 'text-muted-foreground hover:bg-accent/50'
-              }`}
+                }`}
             >
               AI Triage
             </button>
             <button
               onClick={() => setRightPanelTab('fleet')}
-              className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                rightPanelTab === 'fleet'
+              className={`flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${rightPanelTab === 'fleet'
                   ? 'bg-accent text-accent-foreground border-b-2 border-primary'
                   : 'text-muted-foreground hover:bg-accent/50'
-              }`}
+                }`}
             >
               Fleet Status
             </button>
