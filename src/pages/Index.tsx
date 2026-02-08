@@ -347,7 +347,7 @@ const Index = () => {
                 : 'text-muted-foreground hover:bg-accent/50'
                 }`}
             >
-              AI Triage
+              Call Review
             </button>
             <button
               onClick={() => setRightPanelTab('fleet')}

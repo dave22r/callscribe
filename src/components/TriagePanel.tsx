@@ -49,7 +49,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
         <AlertTriangle className="w-8 h-8 mb-3 opacity-30" />
-        <p className="text-sm">Select a call to see triage assessment</p>
+        <p className="text-sm">Select a call to see AI assisted review</p>
       </div>
     );
   }
@@ -72,7 +72,7 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Triage Assessment
+          AI Assisted Call Review
         </h2>
       </div>
 
