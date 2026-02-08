@@ -20,17 +20,27 @@ interface LiveTranscriptProps {
   call: EmergencyCall | null;
 }
 
-const highlightKeywords = (text: string, keywords?: string[]) => {
+const highlightKeywords = (text: string, keywords?: string[], urgency: EmergencyCall['urgency'] = 'stable') => {
   if (!keywords || keywords.length === 0) return text;
 
-  const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
+  // Escape special regex characters to prevent crashes
+  const escapedKeywords = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi');
   const parts = text.split(regex);
+
+  const styles = {
+    critical: 'bg-critical/20 text-critical border-critical/20',
+    urgent: 'bg-urgent/20 text-urgent border-urgent/20',
+    stable: 'bg-stable/20 text-stable border-stable/20'
+  };
+
+  const activeStyle = styles[urgency] || styles.stable;
 
   return parts.map((part, i) => {
     const isKeyword = keywords.some(k => k.toLowerCase() === part.toLowerCase());
     if (isKeyword) {
       return (
-        <span key={i} className="bg-critical/20 text-critical font-medium px-0.5 rounded-sm">
+        <span key={i} className={`${activeStyle} font-bold px-1 rounded-sm border`}>
           {part}
         </span>
       );
@@ -78,10 +88,12 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-3">
         {call.transcript.map((line, index) => {
-          // Debugging log for last item (most likely to be the active one)
-          if (index === call.transcript.length - 1) {
-            console.log(`🖼️ Rendering line ${index}:`, { text: line.text, speaker: line.speaker });
-          }
+          // Combine line-specific keywords with global call symptoms for highlighting
+          const allKeywords = Array.from(new Set([
+            ...(line.keywords || []),
+            ...(call.symptoms || [])
+          ]));
+
           return (
             <motion.div
               key={index}
@@ -112,7 +124,7 @@ const LiveTranscript = ({ call }: LiveTranscriptProps) => {
                   ? 'bg-primary/10 text-foreground'
                   : 'bg-accent text-foreground'
                   }`}>
-                  {highlightKeywords(line.text, line.keywords)}
+                  {highlightKeywords(line.text, allKeywords, call.urgency)}
                 </p>
                 {realtimeTranslation && (
                   <p className="text-xs text-muted-foreground italic mt-1 px-3">
