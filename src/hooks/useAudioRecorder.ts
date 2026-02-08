@@ -12,7 +12,7 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
     const isRecordingRef = useRef(false);
 
     // Queue for incoming audio to be played immediately
-    const playbackQueueRef = useRef<ArrayBuffer[]>([]);
+    const playbackQueueRef = useRef<{ buffer: ArrayBuffer; type: string }[]>([]);
     const isPlayingRef = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false); // Exposed state for UI lock
 
@@ -25,17 +25,19 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
 
         isPlayingRef.current = true;
         setIsPlaying(true);
-        const audioData = playbackQueueRef.current.shift();
+        const item = playbackQueueRef.current.shift();
 
-        if (!audioData) {
+        if (!item) {
             isPlayingRef.current = false;
             setIsPlaying(false);
             return;
         }
 
+        const { buffer: audioData, type: mimeType } = item;
+
         return new Promise<void>((resolve) => {
             try {
-                const blob = new Blob([audioData], { type: 'audio/webm' });
+                const blob = new Blob([audioData], { type: mimeType });
                 const url = URL.createObjectURL(blob);
                 const audio = new Audio(url);
 
@@ -135,13 +137,15 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
     }, [role]);
 
     // Audio Receiver Logic
-    const handleAudioMessage = useCallback((data: { callSid: string; speaker: string; audio: ArrayBuffer }) => {
+    const handleAudioMessage = useCallback((data: { callSid: string; speaker: string; audio: ArrayBuffer; mimeType?: string }) => {
         // 🛡️ SECURITY: Only accept audio if it belongs to the CURRENT active call
         if (data.callSid !== callIdRef.current) return;
         if (data.speaker === role) return; // Ignore own voice
 
-        // console.log(`📥 Received audio from ${data.speaker}. Playing immediately...`);
-        playbackQueueRef.current.push(data.audio);
+        playbackQueueRef.current.push({
+            buffer: data.audio,
+            type: data.mimeType || 'audio/webm'
+        });
 
         // IMMEDIATE PLAYBACK: If not currently playing, start the queue
         if (!isPlayingRef.current) {
