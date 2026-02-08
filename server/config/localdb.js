@@ -73,17 +73,31 @@ class LocalDB {
             },
             updateOne: async (filter, update) => {
                 if (!this.data[name]) return { matchedCount: 0 };
-                const item = this.data[name].find(i => {
+                // Find index to update in place
+                const index = this.data[name].findIndex(i => {
                     for (let key in filter) {
                         if (i[key] !== filter[key]) return false;
                     }
                     return true;
                 });
 
-                if (item) {
+                if (index !== -1) {
+                    const item = this.data[name][index];
+
                     if (update.$set) {
                         Object.assign(item, update.$set);
                     }
+
+                    if (update.$push) {
+                        for (let key in update.$push) {
+                            if (!Array.isArray(item[key])) {
+                                item[key] = [];
+                            }
+                            item[key].push(update.$push[key]);
+                        }
+                    }
+
+                    this.data[name][index] = item;
                     await this.save();
                     return { matchedCount: 1 };
                 }

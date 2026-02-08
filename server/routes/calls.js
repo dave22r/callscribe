@@ -129,22 +129,25 @@ router.post('/:callSid/transcript', async (req, res) => {
             return res.status(400).json({ error: 'Transcript line is required' });
         }
 
-        const call = await db.collection('calls').findOne({ callSid: req.params.callSid });
-        if (!call) {
+        const updateResult = await db.collection('calls').updateOne(
+            { callSid: req.params.callSid },
+            {
+                $push: { transcript: line },
+                $set: {
+                    duration,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        if (updateResult.matchedCount === 0) {
             return res.status(404).json({ error: 'Call not found' });
         }
 
-        if (!Array.isArray(call.transcript)) {
-            call.transcript = [];
-        }
-
-        call.transcript.push(line);
-        if (typeof duration === 'number') {
-            call.duration = duration;
-        }
-
-        call.updatedAt = new Date();
-        await db.save();
+        // Fetch updated call to emit full state (optional, or just emit partial)
+        // For efficiency, we can just emit what we have if we trust the client to append
+        // But to match previous behavior of sending full transcript:
+        const call = await db.collection('calls').findOne({ callSid: req.params.callSid });
 
         const io = req.app.get('io');
         io.emit('call-updated', {
