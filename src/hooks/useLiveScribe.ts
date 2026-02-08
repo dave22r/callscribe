@@ -190,6 +190,15 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
 
         if (callId) {
             activeCallId.current = callId;
+            // Fetch existing transcript to prevent wiping history
+            try {
+                const call = await callsApi.getCall(callId);
+                if (call?.transcript) {
+                    setLines(call.transcript);
+                }
+            } catch (e) {
+                console.error('Failed to sync existing transcript', e);
+            }
         } else if (!activeCallId.current || reset) {
             const now = Date.now();
             const initialCall = {
