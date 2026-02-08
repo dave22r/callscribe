@@ -1,6 +1,6 @@
 import express from 'express';
 import { getDB } from '../config/database.js';
-import { analyzeCallTranscript } from '../services/gemini.js';
+import { analyzeCallTranscript, calculateBestETA } from '../services/gemini.js';
 
 const router = express.Router();
 
@@ -188,6 +188,28 @@ router.post('/analyze', async (req, res) => {
         res.json({ success: true, analysis: result.analysis });
     } catch (error) {
         console.error('Error analyzing call:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * Calculate Best ETA for ambulance dispatch
+ */
+router.post('/dispatch/eta', async (req, res) => {
+    try {
+        const { patientLocation, ambulances } = req.body;
+
+        if (!patientLocation || !ambulances) {
+            return res.status(400).json({ error: 'Patient location and ambulances are required' });
+        }
+
+        console.log('🚑 Calculating best ETA for location:', patientLocation);
+        const result = await calculateBestETA(patientLocation, ambulances);
+        console.log('✅ ETA Recommendation:', result);
+
+        res.json({ success: true, recommendation: result });
+    } catch (error) {
+        console.error('Error calculating ETA:', error);
         res.status(500).json({ error: error.message });
     }
 });

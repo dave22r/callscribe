@@ -1,7 +1,8 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check, Truck } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check, Truck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { EmergencyCall, UrgencyLevel, Ambulance } from '@/data/mockCalls';
+import { callsApi } from '@/services/api';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
@@ -20,6 +21,29 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
 const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
   const [showOverrideOptions, setShowOverrideOptions] = useState(false);
   const [showAmbulanceOptions, setShowAmbulanceOptions] = useState(false);
+  const [etaRecommendation, setEtaRecommendation] = useState<any>(null);
+  const [isLoadingEta, setIsLoadingEta] = useState(false);
+
+  useEffect(() => {
+    const fetchEta = async () => {
+      if (!call || !call.location || call.status === 'resolved' || !ambulances.length) {
+        setEtaRecommendation(null);
+        return;
+      }
+
+      setIsLoadingEta(true);
+      try {
+        const result = await callsApi.calculateBestETA(call.location, ambulances);
+        setEtaRecommendation(result);
+      } catch (error) {
+        console.error('Failed to fetch ETA', error);
+      } finally {
+        setIsLoadingEta(false);
+      }
+    };
+
+    fetchEta();
+  }, [call?.location, call?.id, ambulances.length]);
 
   if (!call) {
     return (
@@ -108,6 +132,39 @@ const TriagePanel = ({ call, ambulances, onOverride, onDispatch, onResolve }: Tr
                 {symptom}
               </span>
             ))}
+          </div>
+        </div>
+
+        {/* Best Response ETA */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-mono uppercase">Best Available Response</span>
+          </div>
+          <div className="pl-5">
+            {isLoadingEta ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-primary/50" />
+                Calculating best route...
+              </div>
+            ) : etaRecommendation ? (
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold font-mono text-primary">{etaRecommendation.etaMinutes} min</span>
+                  <span className="text-xs text-muted-foreground">estimated arrival</span>
+                </div>
+                <p className="text-xs text-foreground font-medium">
+                  Recommended: <span className="text-primary">{
+                    ambulances.find(a => a.id === etaRecommendation.recommendedAmbulanceId)?.unit || 'Unknown Unit'
+                  }</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-tight italic">
+                  "{etaRecommendation.reasoning}"
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Location data unavailable</p>
+            )}
           </div>
         </div>
 

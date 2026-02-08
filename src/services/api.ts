@@ -94,5 +94,22 @@ export const callsApi = {
             console.error('Error creating call:', error);
             return null;
         }
+    },
+
+    async calculateBestETA(patientLocation: string, ambulances: any[]): Promise<any | null> {
+        try {
+            const response = await fetch(`${API_URL}/api/calls/dispatch/eta`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ patientLocation, ambulances })
+            });
+            const data = await response.json();
+            return data.success ? data.recommendation : null;
+        } catch (error) {
+            console.error('Error calculating Best ETA:', error);
+            return null;
+        }
     }
 };

@@ -68,6 +68,63 @@ const analyzeWithAI = async (prompt) => {
     }
 };
 
+export const calculateBestETA = async (patientLocation, ambulances) => {
+    try {
+        const availableAmbulances = ambulances.filter(a => a.status === 'available');
+
+        if (availableAmbulances.length === 0) {
+            return {
+                recommendedAmbulanceId: null,
+                etaMinutes: null,
+                reasoning: "No available ambulances."
+            };
+        }
+
+        const ambulanceLocations = availableAmbulances.map(a => ({
+            id: a.id,
+            unit: a.unit,
+            location: a.location
+        }));
+
+        const prompt = `
+        Patient Location: "${patientLocation}"
+        
+        Available Ambulances:
+        ${JSON.stringify(ambulanceLocations, null, 2)}
+        
+        Task:
+        1. Identify which ambulance is closest to the patient in Vancouver, BC.
+        2. Estimate the driving time in minutes considering urban traffic.
+        3. Recommend that ambulance.
+        
+        Respond ONLY with valid JSON in this format:
+        {
+            "recommendedAmbulanceId": "string (id from list)",
+            "etaMinutes": number (integer minutes),
+            "reasoning": "brief explanation"
+        }
+        `;
+
+        const text = await analyzeWithAI(prompt);
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+
+        if (!jsonMatch) {
+            throw new Error('No JSON found in AI response');
+        }
+
+        return JSON.parse(jsonMatch[0]);
+    } catch (error) {
+        console.error('AI ETA error:', error);
+        // Fallback: pick first available
+        const fallback = ambulances.find(a => a.status === 'available');
+        return {
+            recommendedAmbulanceId: fallback ? fallback.id : null,
+            etaMinutes: 15, // Conservative fallback
+            reasoning: "AI calculation failed, selecting first available."
+        };
+    }
+};
+
 export const analyzeCallTranscript = async (transcript) => {
     try {
         const prompt = `You are an AI emergency medical dispatcher assistant. Analyze this emergency call transcript and provide a structured assessment.

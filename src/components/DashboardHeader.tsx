@@ -17,8 +17,8 @@ const DashboardHeader = ({ pendingCallCount = 0 }: DashboardHeaderProps) => {
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-5">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-critical/10 flex items-center justify-center">
-            <Activity className="w-4 h-4 text-critical" />
+          <div className="w-8 h-8 rounded-md bg-critical/10 flex items-center justify-center overflow-hidden">
+            <img src="/favicon.ico" alt="Logo" className="w-5 h-5 object-contain" />
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-tight leading-none">
