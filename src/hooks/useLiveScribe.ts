@@ -18,8 +18,7 @@ function formatTimestamp(seconds: number): string {
 export function useLiveScribe() {
   const [lines, setLines] = useState<TranscriptLine[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [tokenError, setTokenError] = useState<string | null>(null);
-
+  const [tokenError, setTokenError] = useState<string | null>(null);  const [currentSpeaker, setCurrentSpeaker] = useState<'caller' | 'operator'>('caller');
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',
     onPartialTranscript: () => {
@@ -66,7 +65,9 @@ export function useLiveScribe() {
         microphone: {
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
         },
+        language: 'en', // Explicitly set to English for better accuracy
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not connect to Scribe';

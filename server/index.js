@@ -57,3 +57,4 @@ app.listen(PORT, () => {
   console.log(`CallScribe token server running at http://localhost:${PORT}`);
   console.log('  GET /scribe-token → single-use ElevenLabs Scribe token');
 });
+
