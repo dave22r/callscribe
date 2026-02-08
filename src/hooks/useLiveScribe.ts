@@ -1,13 +1,15 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { useScribe } from '@elevenlabs/react';
 import type { TranscriptLine } from '@/data/mockCalls';
 import { callsApi } from '@/services/api';
 import { socketService } from '@/services/socket';
+import { useAudioRecorder } from './useAudioRecorder';
 
 function formatTimestamp(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} `;
 }
 
 type SpeakerRole = 'caller' | 'operator';
@@ -28,6 +30,7 @@ type StartOptions = {
 export function useLiveScribe(options: UseLiveScribeOptions = {}) {
     const role: SpeakerRole = options.fixedRole ?? 'caller';
 
+    // State declarations...
     const [lines, setLines] = useState<TranscriptLine[]>([]);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [tokenError, setTokenError] = useState<string | null>(null);
@@ -35,6 +38,12 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
     const [isConnecting, setIsConnecting] = useState(false);
 
     const activeCallId = useRef<string | null>(null);
+
+    // Audio Recorder for Walkie-Talkie mode
+    const { startRecording, stopRecording } = useAudioRecorder({
+        role,
+        callIdRef: activeCallId
+    });
     const startTimeRef = useRef<number | null>(null);
     const lastPartialEmitAtRef = useRef(0);
     const lastPartialTextRef = useRef('');
@@ -168,6 +177,8 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
                     autoGainControl: true,
                 },
             });
+
+            startRecording(); // Start recording audio for walkie-talkie
         } catch (e) {
             const message = e instanceof Error ? e.message : 'Could not connect to Scribe';
             console.error('❌ Scribe connection error:', e);
@@ -228,6 +239,9 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
         commitPartial();
         emitPartial('');
         scribe.disconnect();
+
+        stopRecording(activeCallId.current); // Send recorded audio
+
         setPartialText('');
     }, [commitPartial, emitPartial, scribe]);
 
