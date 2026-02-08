@@ -27,7 +27,35 @@ const formatDuration = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
+const formatWaitTime = (timestamp: Date, resolvedAt?: Date) => {
+  const endTime = resolvedAt ? new Date(resolvedAt).getTime() : new Date().getTime();
+  const waitSeconds = Math.floor((endTime - new Date(timestamp).getTime()) / 1000);
+  const minutes = Math.floor(waitSeconds / 60);
+  const seconds = waitSeconds % 60;
+  
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+};
+
 const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
+  // Sort calls: active/queued first, then dispatched, then resolved (all by timestamp)
+  const sortedCalls = [...calls].sort((a, b) => {
+    // Priority order: resolved last, dispatched second-to-last, active/queued first
+    const getPriority = (status: string) => {
+      if (status === 'resolved') return 3;
+      if (status === 'dispatched') return 2;
+      return 1; // active, queued, processing
+    };
+    
+    const priorityDiff = getPriority(a.status) - getPriority(b.status);
+    if (priorityDiff !== 0) return priorityDiff;
+    
+    // Within same priority: sort by timestamp (oldest first)
+    return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+  });
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border">
@@ -36,13 +64,13 @@ const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
             Call Queue
           </h2>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
-            {calls.length}
+            {sortedCalls.length}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        {calls.map((call, index) => {
+        {sortedCalls.map((call, index) => {
           const urg = urgencyConfig[call.urgency];
           const isSelected = call.id === selectedCallId;
 
@@ -77,11 +105,7 @@ const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{formatDuration(call.duration)}</span>
-                </div>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <AlertTriangle className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{call.confidence}%</span>
+                  <span className="text-[10px] font-mono">{formatWaitTime(call.timestamp, call.resolvedAt)}</span>
                 </div>
                 <ChevronRight className="w-3 h-3 text-muted-foreground ml-auto" />
               </div>

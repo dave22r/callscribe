@@ -61,12 +61,6 @@ export function useLiveScribe(options: UseLiveScribeOptions = {}) {
     }, [role]);
 
     const scribe = useScribe({
-        onWebsocketOpen: () => {
-            console.log('✅ ElevenLabs WebSocket Connected');
-        },
-        onWebsocketClose: () => {
-            console.log('❌ ElevenLabs WebSocket Closed');
-        },
         onError: (err) => {
             console.error('❌ ElevenLabs Error:', err);
             setTokenError(typeof err === 'string' ? err : 'Connection failed');

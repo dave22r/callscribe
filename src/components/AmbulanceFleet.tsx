@@ -10,7 +10,6 @@ const statusConfig: Record<string, { label: string; color: string; dotColor: str
   available: { label: 'AVAILABLE', color: 'text-stable', dotColor: 'bg-stable', bg: 'bg-stable/5' },
   'en-route': { label: 'EN ROUTE', color: 'text-urgent', dotColor: 'bg-urgent', bg: 'bg-urgent/5' },
   'on-scene': { label: 'ON SCENE', color: 'text-critical', dotColor: 'bg-critical', bg: 'bg-critical/5' },
-  returning: { label: 'RETURNING', color: 'text-primary', dotColor: 'bg-primary', bg: 'bg-primary/5' },
 };
 
 const AmbulanceFleet = ({ ambulances }: AmbulanceFleetProps) => {
