@@ -18,6 +18,10 @@ const Index = () => {
   const [activeLiveCallId, setActiveLiveCallId] = useState<string | null>(null);
   const liveScribe = useLiveScribe();
 
+  const pendingCallCount = useMemo(() => {
+    return calls.filter(call => call.status === 'active' || call.status === 'queued').length;
+  }, [calls]);
+
   useEffect(() => {
     if (activeLiveCallId && (liveScribe.isConnected || liveScribe.transcript.length > 0)) {
       if (liveScribe.partialTranscript?.trim()) {
@@ -130,13 +134,6 @@ const Index = () => {
     }
   }, [liveScribe, activeLiveCallId, updateCall]);
 
-  const handleAccept = useCallback(
-    (callId: string) => {
-      updateCall(callId, { status: 'queued' });
-    },
-    [updateCall]
-  );
-
   const handleOverride = useCallback(
     (callId: string, urgency: EmergencyCall['urgency']) => {
       updateCall(callId, { urgency, status: 'queued' });
@@ -151,11 +148,18 @@ const Index = () => {
     [updateCall]
   );
 
+  const handleResolve = useCallback(
+    (callId: string) => {
+      updateCall(callId, { status: 'resolved' });
+    },
+    [updateCall]
+  );
+
   const [showMap, setShowMap] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <DashboardHeader />
+      <DashboardHeader pendingCallCount={pendingCallCount} />
       <StatsBar />
 
 
@@ -217,9 +221,9 @@ const Index = () => {
         <div className="overflow-hidden">
           <TriagePanel
             call={displayCall}
-            onAccept={displayCall ? () => handleAccept(displayCall.id) : undefined}
             onOverride={displayCall ? (u) => handleOverride(displayCall.id, u) : undefined}
             onDispatch={displayCall ? () => handleDispatch(displayCall.id) : undefined}
+            onResolve={displayCall ? () => handleResolve(displayCall.id) : undefined}
           />
         </div>
       </div>

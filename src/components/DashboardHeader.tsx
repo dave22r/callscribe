@@ -1,7 +1,11 @@
 import { Activity, Bell, Radio, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  pendingCallCount?: number;
+}
+
+const DashboardHeader = ({ pendingCallCount = 0 }: DashboardHeaderProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -18,7 +22,7 @@ const DashboardHeader = () => {
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-tight leading-none">
-              Ambu<span className="text-critical">LANCE</span>
+              Call<span className="text-critical">Scribe</span>
             </h1>
             <p className="text-[10px] text-muted-foreground leading-none mt-0.5">AI-Assisted Triage</p>
           </div>
@@ -35,13 +39,13 @@ const DashboardHeader = () => {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Radio className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-mono">4 ACTIVE CALLS</span>
+          <span className="text-[11px] font-mono">{pendingCallCount} PENDING {pendingCallCount === 1 ? 'CALL' : 'CALLS'}</span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-muted-foreground">
+        {/* <div className="flex items-center gap-1.5 text-muted-foreground">
           <Shield className="w-3.5 h-3.5" />
           <span className="text-[11px] font-mono">5 UNITS</span>
-        </div>
+        </div> */}
 
         <div className="h-6 w-px bg-border" />
 

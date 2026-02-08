@@ -4,13 +4,12 @@ import { Timer, TrendingDown, PhoneCall, Zap } from 'lucide-react';
 const stats = [
   { label: 'Avg. Response Time', value: '4.2 min', change: '-18%', icon: Timer, positive: true },
   { label: 'Active Calls', value: '4', change: '+2', icon: PhoneCall, positive: false },
-  { label: 'AI Accuracy', value: '94.3%', change: '+2.1%', icon: Zap, positive: true },
   { label: 'Dispatch Delay', value: '1.8 min', change: '-32%', icon: TrendingDown, positive: true },
 ];
 
 const StatsBar = () => {
   return (
-    <div className="grid grid-cols-4 gap-3 p-4 border-b border-border bg-card">
+    <div className="grid grid-cols-3 gap-3 p-4 border-b border-border bg-card">
       {stats.map((stat, index) => (
         <motion.div
           key={stat.label}

@@ -27,6 +27,18 @@ const formatDuration = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
+const formatWaitTime = (timestamp: Date) => {
+  const now = new Date();
+  const waitSeconds = Math.floor((now.getTime() - new Date(timestamp).getTime()) / 1000);
+  const minutes = Math.floor(waitSeconds / 60);
+  const seconds = waitSeconds % 60;
+  
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+};
+
 const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -77,11 +89,7 @@ const CallQueue = ({ calls, selectedCallId, onSelectCall }: CallQueueProps) => {
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{formatDuration(call.duration)}</span>
-                </div>
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <AlertTriangle className="w-3 h-3" />
-                  <span className="text-[10px] font-mono">{call.confidence}%</span>
+                  <span className="text-[10px] font-mono">{formatWaitTime(call.timestamp)}</span>
                 </div>
                 <ChevronRight className="w-3 h-3 text-muted-foreground ml-auto" />
               </div>

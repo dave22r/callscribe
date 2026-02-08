@@ -1,12 +1,13 @@
-import { Brain, AlertTriangle, Heart, User, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { Brain, AlertTriangle, Heart, User, MapPin, XCircle, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
-  onAccept?: () => void;
   onOverride?: (urgency: UrgencyLevel) => void;
   onDispatch?: () => void;
+  onResolve?: () => void;
 }
 
 const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: string; glow: string }> = {
@@ -15,7 +16,9 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
   stable: { label: 'STABLE', color: 'text-stable', bg: 'bg-stable/10', glow: 'glow-stable' },
 };
 
-const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProps) => {
+const TriagePanel = ({ call, onOverride, onDispatch, onResolve }: TriagePanelProps) => {
+  const [showOverrideOptions, setShowOverrideOptions] = useState(false);
+
   if (!call) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -26,6 +29,11 @@ const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProp
   }
 
   const urg = urgencyDisplay[call.urgency];
+
+  const handleOverrideClick = (urgency: UrgencyLevel) => {
+    onOverride?.(urgency);
+    setShowOverrideOptions(false);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -47,22 +55,10 @@ const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProp
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono text-muted-foreground uppercase">Urgency Classification</span>
-            <span className="text-[10px] font-mono text-muted-foreground">{call.confidence}% confidence</span>
           </div>
           <div className="flex items-center gap-2">
             <AlertTriangle className={`w-5 h-5 ${urg.color}`} />
             <span className={`text-lg font-bold font-mono ${urg.color}`}>{urg.label}</span>
-          </div>
-          {/* Confidence bar */}
-          <div className="mt-3 h-1.5 bg-background/30 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${call.confidence}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className={`h-full rounded-full ${call.urgency === 'critical' ? 'bg-critical' :
-                  call.urgency === 'urgent' ? 'bg-urgent' : 'bg-stable'
-                }`}
-            />
           </div>
         </motion.div>
 
@@ -117,16 +113,55 @@ const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProp
         {/* Dispatcher Actions */}
         <div className="pt-2 space-y-2">
           <p className="text-[10px] font-mono text-muted-foreground uppercase">Dispatcher Actions</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
-              <CheckCircle className="w-3.5 h-3.5" />
-              Accept
-            </button>
-            <button className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:bg-accent/80 transition-colors border border-border">
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowOverrideOptions(!showOverrideOptions)}
+              disabled={!onOverride}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:bg-accent/80 transition-colors border border-border disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <XCircle className="w-3.5 h-3.5" />
-              Override
+              Override Urgency
             </button>
+            
+            {showOverrideOptions && onOverride && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-md shadow-lg overflow-hidden z-10">
+                <button
+                  onClick={() => handleOverrideClick('critical')}
+                  disabled={call.urgency === 'critical'}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-critical/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                >
+                  <div className="w-2 h-2 rounded-full bg-critical" />
+                  <span className="font-mono text-critical">CRITICAL</span>
+                </button>
+                <button
+                  onClick={() => handleOverrideClick('urgent')}
+                  disabled={call.urgency === 'urgent'}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-urgent/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                >
+                  <div className="w-2 h-2 rounded-full bg-urgent" />
+                  <span className="font-mono text-urgent">URGENT</span>
+                </button>
+                <button
+                  onClick={() => handleOverrideClick('stable')}
+                  disabled={call.urgency === 'stable'}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-stable/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                >
+                  <div className="w-2 h-2 rounded-full bg-stable" />
+                  <span className="font-mono text-stable">STABLE</span>
+                </button>
+              </div>
+            )}
           </div>
+
+          <button 
+            onClick={onResolve}
+            disabled={!onResolve}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-stable/20 text-stable text-xs font-medium hover:bg-stable/30 transition-colors border border-stable/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Check className="w-3.5 h-3.5" />
+            Mark as Resolved
+          </button>
         </div>
       </div>
     </div>
