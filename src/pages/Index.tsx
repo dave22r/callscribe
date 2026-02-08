@@ -227,6 +227,8 @@ const Index = () => {
     [updateCall]
   );
 
+  const callerLink = activeLiveCallId ? `/caller/${activeLiveCallId}` : null;
+
   const [showMap, setShowMap] = useState(false);
 
   return (
@@ -292,6 +294,14 @@ const Index = () => {
                   <MicOff className="w-3.5 h-3.5 mr-1.5" />
                   Mute operator
                 </Button>
+                {callerLink && (
+                  <Link to={callerLink} className="ml-2">
+                    <Button size="sm" variant="secondary">
+                      <Link2 className="w-3.5 h-3.5 mr-1.5" />
+                      Open caller view
+                    </Button>
+                  </Link>
+                )}
               </>
             )}
             {liveScribe.error && (
