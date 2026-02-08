@@ -105,8 +105,11 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
         const recorder = mediaRecorderRef.current;
 
         recorder.onstop = () => {
-            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-            console.log(`🎤 Audio recording stopped. Size: ${audioBlob.size} bytes`);
+            // iOS might record as audio/mp4 or audio/aac. Chrome uses audio/webm.
+            // Do NOT force a type here; let the Blob inherit or use the recorder's type.
+            const mimeType = recorder.mimeType || 'audio/webm';
+            const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+            console.log(`🎤 Audio recording stopped. Size: ${audioBlob.size} bytes. Type: ${mimeType}`);
 
             if (callSid && audioBlob.size > 0) {
                 // Convert Blob to ArrayBuffer to send over socket
@@ -117,9 +120,10 @@ export function useAudioRecorder({ role, callIdRef }: AudioRecorderOptions) {
                     socketService.emit('audio-message', {
                         callSid,
                         speaker: role,
-                        audio: buffer
+                        audio: buffer,
+                        mimeType // Send the actual type to server
                     });
-                    console.log('📤 Audio message sent');
+                    console.log(`📤 Audio message sent (${mimeType})`);
                 };
             }
 

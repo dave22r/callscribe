@@ -64,62 +64,77 @@ io.on('connection', (socket) => {
 
     socket.on('audio-message', (payload) => {
         // Broadcast audio chunk/blob to other clients
-        // CONVERT WebM -> MP4 for iOS support
-        import('fluent-ffmpeg').then(({ default: ffmpeg }) => {
-            import('fs').then(({ default: fs }) => {
-                import('path').then(({ default: path }) => {
-                    import('os').then(({ default: os }) => {
+        // CONVERT WebM/MP4 -> MP4 (AAC) for iOS support
 
-                        const tempDir = path.join(os.tmpdir(), 'callscribe-audio');
-                        if (!fs.existsSync(tempDir)) {
-                            fs.mkdirSync(tempDir, { recursive: true });
-                        }
+        Promise.all([
+            import('fluent-ffmpeg'),
+            import('ffmpeg-static'),
+            import('fs'),
+            import('path'),
+            import('os')
+        ]).then(([ffmpegModule, ffmpegStaticModule, fsModule, pathModule, osModule]) => {
+            const ffmpeg = ffmpegModule.default;
+            const ffmpegPath = ffmpegStaticModule.default;
+            const fs = fsModule.default;
+            const path = pathModule.default;
+            const os = osModule.default;
 
-                        const timestamp = Date.now();
-                        const inputPath = path.join(tempDir, `input-${timestamp}-${socket.id}.webm`);
-                        const outputPath = path.join(tempDir, `output-${timestamp}-${socket.id}.mp4`);
+            // Configure ffmpeg to use the static binary
+            ffmpeg.setFfmpegPath(ffmpegPath);
 
-                        // Write input buffer
-                        fs.writeFile(inputPath, Buffer.from(payload.audio), (err) => {
-                            if (err) {
-                                console.error('❌ Failed to write temp audio file:', err);
-                                return;
+            const tempDir = path.join(os.tmpdir(), 'callscribe-audio');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            // Determine input extension based on client mimeType
+            // Default to .webm if not specified (fallback)
+            const clientType = payload.mimeType || 'audio/webm';
+            const ext = clientType.includes('mp4') ? 'mp4' : 'webm';
+
+            const timestamp = Date.now();
+            const inputPath = path.join(tempDir, `input-${timestamp}-${socket.id}.${ext}`);
+            const outputPath = path.join(tempDir, `output-${timestamp}-${socket.id}.mp4`);
+
+            // Write input buffer
+            fs.writeFile(inputPath, Buffer.from(payload.audio), (err) => {
+                if (err) {
+                    console.error('❌ Failed to write temp audio file:', err);
+                    return;
+                }
+
+                // Convert using ffmpeg
+                ffmpeg(inputPath)
+                    .toFormat('mp4')
+                    .audioCodec('aac') // Force AAC for Safari/iOS
+                    .on('error', (err) => {
+                        console.error('❌ FFmpeg conversion error:', err);
+                        // Fallback: send original if conversion fails
+                        socket.broadcast.emit('audio-message', payload);
+                        fs.unlink(inputPath, () => { }); // Cleanup
+                    })
+                    .on('end', () => {
+                        // Read converted file
+                        fs.readFile(outputPath, (readErr, data) => {
+                            if (readErr) {
+                                console.error('❌ Failed to read converted audio:', readErr);
+                                socket.broadcast.emit('audio-message', payload); // Fallback
+                            } else {
+                                console.log(`✅ Converted (${ext} -> mp4/aac). Size: ${data.length} bytes`);
+                                // Send MP4 buffer
+                                socket.broadcast.emit('audio-message', {
+                                    ...payload,
+                                    audio: data,
+                                    mimeType: 'audio/mp4'
+                                });
                             }
 
-                            // Convert using ffmpeg
-                            ffmpeg(inputPath)
-                                .toFormat('mp4')
-                                .on('error', (err) => {
-                                    console.error('❌ FFmpeg conversion error:', err);
-                                    // Fallback: send original WebM if conversion fails
-                                    socket.broadcast.emit('audio-message', payload);
-                                    fs.unlink(inputPath, () => { }); // Cleanup
-                                })
-                                .on('end', () => {
-                                    // Read converted file
-                                    fs.readFile(outputPath, (readErr, data) => {
-                                        if (readErr) {
-                                            console.error('❌ Failed to read converted audio:', readErr);
-                                            socket.broadcast.emit('audio-message', payload); // Fallback
-                                        } else {
-                                            console.log(`✅ Converted audio to MP4. Size: ${data.length} bytes`);
-                                            // Send MP4 buffer
-                                            socket.broadcast.emit('audio-message', {
-                                                ...payload,
-                                                audio: data,
-                                                mimeType: 'audio/mp4'
-                                            });
-                                        }
-
-                                        // Cleanup temp files
-                                        fs.unlink(inputPath, () => { });
-                                        fs.unlink(outputPath, () => { });
-                                    });
-                                })
-                                .save(outputPath);
+                            // Cleanup temp files
+                            fs.unlink(inputPath, () => { });
+                            fs.unlink(outputPath, () => { });
                         });
-                    });
-                });
+                    })
+                    .save(outputPath);
             });
         }).catch(err => {
             console.error('Failed to load dependencies for conversion:', err);
