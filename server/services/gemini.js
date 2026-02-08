@@ -55,6 +55,41 @@ const analyzeWithOpenRouter = async (prompt) => {
     return completion.choices[0].message.content;
 };
 
+
+
+const analyzeWithFeatherless = async (prompt) => {
+    if (!process.env.FEATHERLESS_API_KEY) {
+        throw new Error('Featherless API key not configured');
+    }
+
+    const response = await fetch('https://api.featherless.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${process.env.FEATHERLESS_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'zai-org/GLM-4.6',
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000
+        })
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Featherless API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+};
+
 const analyzeWithAI = async (prompt) => {
     const provider = getAIProvider();
     const shouldUseOpenRouter = provider === 'openrouter' || !process.env.VITE_GEMINI_API_KEY;
@@ -105,7 +140,16 @@ export const calculateBestETA = async (patientLocation, ambulances) => {
         }
         `;
 
-        const text = await analyzeWithAI(prompt);
+        let text;
+        try {
+            console.log('🦅 Requesting ETA from Featherless (GLM-4.6)...');
+            text = await analyzeWithFeatherless(prompt);
+            console.log('🦅 Featherless response received');
+        } catch (featherlessError) {
+            console.warn('⚠️ Featherless ETA failed, falling back to OpenRouter:', featherlessError.message);
+            text = await analyzeWithAI(prompt);
+        }
+
         const jsonMatch = text.match(/\{[\s\S]*\}/);
 
         if (!jsonMatch) {
