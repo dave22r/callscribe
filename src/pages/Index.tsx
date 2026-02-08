@@ -8,12 +8,13 @@ import DispatchRecommendation from '@/components/DispatchRecommendation';
 import LiveTranscript from '@/components/LiveTranscript';
 import TriagePanel from '@/components/TriagePanel';
 import AmbulanceFleet from '@/components/AmbulanceFleet';
+import AmbulanceMap from '@/components/AmbulanceMap';
 import { useLiveScribe } from '@/hooks/useLiveScribe';
 import { useCalls } from '@/hooks/useCalls';
 import type { EmergencyCall, Ambulance } from '@/data/mockCalls';
 import { mockAmbulances } from '@/data/mockCalls';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Square, Link2 } from 'lucide-react';
+import { Mic, MicOff, Square, Link2, Map } from 'lucide-react';
 
 const Index = () => {
   const { calls, addCall, updateCall, getCall, getPartial } = useCalls();
@@ -260,6 +261,14 @@ const Index = () => {
         {/* Live Transcript */}
         <div className="border-r border-border overflow-hidden flex flex-col">
           <div className="px-4 py-2 border-b border-border flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant={showMap ? "default" : "outline"}
+              onClick={() => setShowMap(!showMap)}
+            >
+              <Map className="w-3.5 h-3.5 mr-1.5" />
+              {showMap ? 'Hide' : 'Show'} Map
+            </Button>
             {!activeLiveCallId ? (
               <Button
                 size="sm"
@@ -309,7 +318,11 @@ const Index = () => {
             )}
           </div>
           <div className="flex-1 min-h-0">
-            <LiveTranscript call={displayCall} />
+            {showMap ? (
+              <AmbulanceMap ambulances={ambulances} calls={calls} />
+            ) : (
+              <LiveTranscript call={displayCall} />
+            )}
           </div>
         </div>
 
