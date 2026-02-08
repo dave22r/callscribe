@@ -4,6 +4,9 @@ import type { EmergencyCall, UrgencyLevel } from '@/data/mockCalls';
 
 interface TriagePanelProps {
   call: EmergencyCall | null;
+  onAccept?: () => void;
+  onOverride?: (urgency: UrgencyLevel) => void;
+  onDispatch?: () => void;
 }
 
 const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: string; glow: string }> = {
@@ -12,7 +15,7 @@ const urgencyDisplay: Record<UrgencyLevel, { label: string; color: string; bg: s
   stable: { label: 'STABLE', color: 'text-stable', bg: 'bg-stable/10', glow: 'glow-stable' },
 };
 
-const TriagePanel = ({ call }: TriagePanelProps) => {
+const TriagePanel = ({ call, onAccept, onOverride, onDispatch }: TriagePanelProps) => {
   if (!call) {
     return (
       <div className="flex flex-col h-full items-center justify-center text-muted-foreground">
@@ -56,10 +59,9 @@ const TriagePanel = ({ call }: TriagePanelProps) => {
               initial={{ width: 0 }}
               animate={{ width: `${call.confidence}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className={`h-full rounded-full ${
-                call.urgency === 'critical' ? 'bg-critical' :
-                call.urgency === 'urgent' ? 'bg-urgent' : 'bg-stable'
-              }`}
+              className={`h-full rounded-full ${call.urgency === 'critical' ? 'bg-critical' :
+                  call.urgency === 'urgent' ? 'bg-urgent' : 'bg-stable'
+                }`}
             />
           </div>
         </motion.div>
@@ -96,10 +98,9 @@ const TriagePanel = ({ call }: TriagePanelProps) => {
             {call.symptoms.map((symptom) => (
               <span
                 key={symptom}
-                className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${
-                  call.urgency === 'critical' ? 'bg-critical/10 text-critical' :
-                  call.urgency === 'urgent' ? 'bg-urgent/10 text-urgent' : 'bg-stable/10 text-stable'
-                }`}
+                className={`text-[11px] font-mono px-2 py-0.5 rounded-md ${call.urgency === 'critical' ? 'bg-critical/10 text-critical' :
+                    call.urgency === 'urgent' ? 'bg-urgent/10 text-urgent' : 'bg-stable/10 text-stable'
+                  }`}
               >
                 {symptom}
               </span>

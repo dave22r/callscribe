@@ -6,7 +6,8 @@ export interface EmergencyCall {
   phone: string;
   location: string;
   urgency: UrgencyLevel;
-  status: 'active' | 'queued' | 'dispatched' | 'resolved';
+  status: 'active' | 'queued' | 'dispatched' | 'resolved' | 'processing';
+  tags?: string[];
   summary: string;
   symptoms: string[];
   patientType: string;

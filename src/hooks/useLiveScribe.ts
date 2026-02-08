@@ -21,12 +21,23 @@ export function useLiveScribe() {
     const [startTime, setStartTime] = useState<number | null>(null);
     const [tokenError, setTokenError] = useState<string | null>(null);
     const [currentSpeaker, setCurrentSpeaker] = useState<'caller' | 'operator'>('caller');
+    const currentSpeakerRef = useRef<'caller' | 'operator'>('caller');
     const [partialText, setPartialText] = useState('');
 
     // Track the active call ID relative to the backend
     const activeCallId = useRef<string | null>(null);
 
     const scribe = useScribe({
+        onWebsocketOpen: () => {
+            console.log('✅ ElevenLabs WebSocket Connected');
+        },
+        onWebsocketClose: () => {
+            console.log('❌ ElevenLabs WebSocket Closed');
+        },
+        onError: (err) => {
+            console.error('❌ ElevenLabs Error:', err);
+            setTokenError(typeof err === 'string' ? err : 'Connection failed');
+        },
         modelId: 'scribe_v2_realtime',
         onPartialTranscript: (data) => {
             if (data?.text) {
@@ -34,12 +45,13 @@ export function useLiveScribe() {
             }
         },
         onCommittedTranscript: async (data: { text: string }) => {
-            console.log('✍️ Committed transcript:', data.text);
             if (!data.text?.trim()) return;
+
+            console.log('📝 Processing commit. Current Ref Speaker:', currentSpeakerRef.current);
 
             const elapsed = startTime != null ? (Date.now() - startTime) / 1000 : 0;
             const newLine: TranscriptLine = {
-                speaker: currentSpeaker,
+                speaker: currentSpeakerRef.current, // Use ref to avoid stale closure
                 text: data.text.trim(),
                 timestamp: formatTimestamp(elapsed),
             };
@@ -61,40 +73,60 @@ export function useLiveScribe() {
         },
     });
 
-    const start = useCallback(async () => {
+    const start = useCallback(async (existingCallId?: string) => {
         console.log('🎤 Starting ElevenLabs Scribe transcription...');
         setTokenError(null);
         setLines([]);
         setPartialText('');
         const now = Date.now();
         setStartTime(now);
-        activeCallId.current = null;
+
+        // Reset speaker
+        console.log('🔄 Resetting speaker to caller');
+        setCurrentSpeaker('caller');
+        currentSpeakerRef.current = 'caller';
+
+        // Use existing ID if provided, otherwise null (will create new)
+        activeCallId.current = existingCallId || null;
 
         try {
-            // 1. Create call in backend
-            const initialCall = {
-                from: 'Live Caller',
-                status: 'active',
-                timestamp: new Date(now),
-                transcript: [],
-                callerName: 'Live Caller',
-                location: 'Detecting...'
-            };
+            if (!activeCallId.current) {
+                // 1. Create call in backend if no ID provided
+                const initialCall = {
+                    from: 'Live Caller',
+                    status: 'active',
+                    timestamp: new Date(now),
+                    transcript: [],
+                    callerName: 'Live Caller',
+                    location: 'Detecting...'
+                };
 
-            console.log('Creating backend call record...');
-            const createdCall = await callsApi.createCall(initialCall);
+                console.log('Creating backend call record...');
+                const createdCall = await callsApi.createCall(initialCall);
 
-            if (createdCall && createdCall.callSid) {
-                activeCallId.current = createdCall.callSid;
-                console.log('✅ Backend call created:', createdCall.callSid);
+                if (createdCall && createdCall.callSid) {
+                    activeCallId.current = createdCall.callSid;
+                    console.log('✅ Backend call created:', createdCall.callSid);
+                } else {
+                    console.error('⚠️ Failed to create backend call, running in offline mode');
+                }
             } else {
-                console.error('⚠️ Failed to create backend call, running in offline mode');
+                console.log('✅ Using existing active call:', activeCallId.current);
             }
 
-            // 2. Connect to ElevenLabs
+            // 2. Fetch ephemeral token from backend
+            console.log('🔑 Fetching access token...');
+            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const tokenResponse = await fetch(`${API_URL}/api/elevenlabs/token`);
+            if (!tokenResponse.ok) {
+                throw new Error('Failed to fetch access token');
+            }
+            const { token } = await tokenResponse.json();
+
+            // 3. Connect to ElevenLabs
             console.log('🔌 Connecting to ElevenLabs Scribe...');
             await scribe.connect({
-                token: ELEVENLABS_API_KEY,
+                token,
                 microphone: {
                     echoCancellation: true,
                     noiseSuppression: true,
@@ -121,7 +153,12 @@ export function useLiveScribe() {
     }, [scribe]);
 
     const toggleSpeaker = useCallback(() => {
-        setCurrentSpeaker(prev => prev === 'caller' ? 'operator' : 'caller');
+        setCurrentSpeaker(prev => {
+            const next = prev === 'caller' ? 'operator' : 'caller';
+            console.log('🔀 Toggling speaker to:', next);
+            currentSpeakerRef.current = next; // Update ref immediately
+            return next;
+        });
     }, []);
 
     return {

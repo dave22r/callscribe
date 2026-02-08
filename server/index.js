@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import twilioRoutes from './routes/twilio.js';
-import callRoutes from './routes/calls.js';
+import callsRouter from './routes/calls.js';
+import elevenLabsRouter from './routes/elevenlabs.js';
 import { connectDB } from './config/database.js';
 
 dotenv.config();
@@ -13,7 +14,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.CLIENT_URL || 'http://localhost:5173',
+        origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'http://localhost:8080'],
         methods: ['GET', 'POST']
     }
 });
@@ -31,7 +32,8 @@ app.set('io', io);
 
 // Routes
 app.use('/api/twilio', twilioRoutes);
-app.use('/api/calls', callRoutes);
+app.use('/api/calls', callsRouter);
+app.use('/api/elevenlabs', elevenLabsRouter);
 
 // Health check
 app.get('/health', (req, res) => {

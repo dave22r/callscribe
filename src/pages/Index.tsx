@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import VancouverMap from '@/components/VancouverMap';
+
 import DashboardHeader from '@/components/DashboardHeader';
 import StatsBar from '@/components/StatsBar';
 import CallQueue from '@/components/CallQueue';
 import DispatchRecommendation from '@/components/DispatchRecommendation';
 import LiveTranscript from '@/components/LiveTranscript';
 import TriagePanel from '@/components/TriagePanel';
-import { useWebSpeechTranscription } from '@/hooks/useWebSpeechTranscription';
+import { useLiveScribe } from '@/hooks/useLiveScribe';
 import { useCalls } from '@/hooks/useCalls';
 import type { EmergencyCall } from '@/data/mockCalls';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,14 @@ const Index = () => {
   const { calls, addCall, updateCall, getCall } = useCalls();
   const [selectedCallId, setSelectedCallId] = useState<string | null>(calls[0]?.id ?? null);
   const [activeLiveCallId, setActiveLiveCallId] = useState<string | null>(null);
-  const liveScribe = useWebSpeechTranscription();
+  const liveScribe = useLiveScribe();
 
   useEffect(() => {
     if (activeLiveCallId && (liveScribe.isConnected || liveScribe.transcript.length > 0)) {
+      if (liveScribe.partialTranscript?.trim()) {
+        console.log('🗣️ UI Updating partial transcript with speaker:', liveScribe.currentSpeaker);
+      }
+
       const currentTranscript = [...liveScribe.transcript];
       if (liveScribe.partialTranscript?.trim()) {
         currentTranscript.push({
@@ -31,7 +35,7 @@ const Index = () => {
 
       updateCall(activeLiveCallId, {
         transcript: currentTranscript,
-        duration: liveScribe.transcript.length * 2, // Rough estimate or track processing time
+        duration: liveScribe.transcript.length * 2,
       });
     }
   }, [activeLiveCallId, liveScribe.transcript, liveScribe.partialTranscript, liveScribe.isConnected, liveScribe.currentSpeaker, updateCall]);
@@ -40,8 +44,10 @@ const Index = () => {
   const displayCall = selectedCall;
 
   const handleStartLive = useCallback(async () => {
-    // Create a new call entry immediately
+    // Create a new call entry using useCalls (frontend)
     const newCall = addCall([]);
+
+    // Set initial metadata
     updateCall(newCall.id, {
       callerName: 'Live Call...',
       status: 'active',
@@ -53,11 +59,13 @@ const Index = () => {
 
     setSelectedCallId(newCall.id);
     setActiveLiveCallId(newCall.id);
-    await liveScribe.start();
+
+    // Start scribe with the specific Call ID
+    await liveScribe.start(newCall.id);
   }, [liveScribe, addCall, updateCall]);
 
   const handleStopLive = useCallback(async () => {
-    liveScribe.stop();
+    await liveScribe.stop();
 
     if (activeLiveCallId) {
       // Finalize transcript
@@ -108,7 +116,7 @@ const Index = () => {
             });
           } else {
             // Fallback
-            updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed, call saved.' });
+            updateCall(activeLiveCallId, { status: 'queued', summary: 'Analysis failed (backend error).' });
           }
         } catch (error) {
           console.error('Analysis failed', error);
@@ -148,20 +156,9 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <DashboardHeader />
-      <StatsBar calls={calls} />
+      <StatsBar />
 
 
-      {/* Toggle Map Button */}
-      <div className="my-4 mx-auto w-full max-w-4xl flex flex-col items-center">
-        <Button
-          variant="outline"
-          onClick={() => setShowMap((prev) => !prev)}
-          className="mb-2"
-        >
-          {showMap ? 'Hide Map' : 'Show Map'}
-        </Button>
-        {showMap && <VancouverMap />}
-      </div>
 
       <div className="flex-1 grid grid-cols-[280px_1fr_320px] min-h-0">
         {/* Call Queue */}
