@@ -1,90 +1,54 @@
-# CallScribe 🚑
-**Real-Time AI Assistant for 911 Dispatchers**
+# CallScribe 
 
-> *Saving seconds saves lives.*
+**The national response time goal for paramedics in Canada is 8 minutes 59 seconds, for the most serious emergencies, and according to the BCHRN , in the province of British Columbia, this goal is only being met 30% of the time.**
 
 CallScribe is a next-generation dispatch interface that uses **Real-Time AI** to listen, transcribe, and analyze emergency calls instantly. It empowers operators to make faster, data-driven decisions when every moment counts.
 
-## 🚨 The Problem
-911 Operators are overwhelmed. They have to:
-1.  Listen to distressed callers.
-2.  Type transcripts manually.
-3.  Calculate logistics and traffic.
-4.  Make life-or-death triage decisions.
-...all at the same time.
+## The Problem
 
-## ⚡ The Solution
+Emergency dispatchers operate in one of the most high-stakes environments imaginable. In just a few minutes, they must extract critical information from callers who may be panicked, injured, or speaking a different language, all while knowing that missing a single question (such as breathing or scene safety) can have life-or-death consequences.
+
+##  The Solution
 CallScribe automates the "busy work" so the human can focus on the human.
-- **👂 Listens**: Transcribes audio in real-time using medical-grade AI.
-- **🧠 Thinks**: Extracts symptoms, patient age, and urgency automatically.
-- **🚀 Acts**: Calculates traffic-based ETAs and recommends the nearest ambulance.
+- **Listens**: Transcribes audio in real-time using medical-grade AI.
+- **Thinks**: Extracts symptoms, patient age, and urgency automatically.
+- **Acts**: Calculates traffic-based ETAs and recommends the nearest ambulance.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🎙️ Live Transcription (ElevenLabs Scribe)
-Forget typing. We use **ElevenLabs Scribe v2** to transcribe audio with human-level accuracy, handling accents, medical terms, and overlapping speech (Diarization) in real-time.
+### Live Transcription (ElevenLabs Scribe)
+Forget typing. We use **ElevenLabs Scribe v2** to transcribe audio with human-level accuracy, handling accents, diff languages medical terms, and overlapping speech (Diarization) in real-time.
 
-### 🧠 Intelligent Triage (Google Gemini)
+### Intelligent Triage (Google Gemini)
 Our background AI engine analyzesthe transcript every 5 seconds to:
 - **Detect Symptoms**: "Chest pain", "Slurred speech".
 - **Assess Urgency**: Automatically flags calls as **Stable**, **Urgent**, or **Critical**.
-- **Generate Checklists**: Pushes live SOPs (e.g., "Start CPR") to the operator's screen.
+- **Generate Checklists**: Pushes live SOPs to the operator's screen.
 
-### 🚑 Smart Dispatch (Featherless + OpenRouter)
+### Smart Dispatch (Featherless + OpenRouter)
 Who is *actually* closest?
 - Real-time map with moving ambulance markers.
 - **Featherless (GLM-4)** calculates complex logistics and traffic patterns.
-- **OpenRouter (GPT-4o)** serves as a robust fallback to ensure 99.99% uptime.
+- **OpenRouter (GPT-4o)** serves as a robust fallback to ensure uptime.
 
-### 📱 "Walkie-Talkie" Audio System
+### Audio Playback
 A custom bi-directional audio pipeline that allows:
 - **Cross-Device Communication**: Operator on Laptop ↔️ Paramedic on iPhone.
 - **On-the-Fly Conversion**: Transcodes web audio (WebM) to iOS-compatible formats (AAC/MP4) instantly on the server.
-
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend**: React, TypeScript, TailwindCSS, Shadcn/UI, Leaflet Maps.
 - **Backend**: Node.js, Express, Socket.io (Real-time events).
-- **AI**: ElevenLabs Scribe (STT), Google Gemini (Analysis), Featherless/OpenRouter (Logistics).
+- **AI**: ElevenLabs Scribe (STT), Google Gemini (Analysis & Transalation), Featherless/OpenRouter (Logistics).
 - **Database**: MongoDB Atlas (Encrypted storage).
-- **Infrastructure**: PM2, FFmpeg (Server-side processing).
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 20+
-- MongoDB URI
-- API Keys (ElevenLabs, Gemini, OpenRouter)
-
-### Installation
-```bash
-# Clone the repo
-git clone https://github.com/dave22r/callscribe.git
-
-# Install dependencies
-npm install
-
-# Setup Environment
-cp .env.example .env
-# (Fill in your API keys)
-```
-
-### Run Locally
-```bash
-# Starts both Frontend (Vite) and Backend (Node) concurrently
-npm run dev:all
-```
-Open `http://localhost:8080` to see the Dispatch Dashboard.
-
----
-
-## 🔒 Privacy & Security
+## Privacy & Security
 CallScribe uses a **Zero-Retention Architecture**.
 - AI analysis is performed in-memory and discarded.
 - Audio files are cryptographically deleted immediately after processing.
@@ -92,4 +56,6 @@ CallScribe uses a **Zero-Retention Architecture**.
 
 ---
 
-*Built with ❤️ for the Hackathon.*
+## Demo
+https://callscribe.onrender.com
+https://www.youtube.com/watch?v=Ft1t0QtdnL8
