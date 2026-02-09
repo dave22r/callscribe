@@ -1,73 +1,95 @@
-# Welcome to your Lovable project
+# CallScribe 🚑
+**Real-Time AI Assistant for 911 Dispatchers**
 
-## Project info
+> *Saving seconds saves lives.*
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+CallScribe is a next-generation dispatch interface that uses **Real-Time AI** to listen, transcribe, and analyze emergency calls instantly. It empowers operators to make faster, data-driven decisions when every moment counts.
 
-## How can I edit this code?
+## 🚨 The Problem
+911 Operators are overwhelmed. They have to:
+1.  Listen to distressed callers.
+2.  Type transcripts manually.
+3.  Calculate logistics and traffic.
+4.  Make life-or-death triage decisions.
+...all at the same time.
 
-There are several ways of editing your application.
+## ⚡ The Solution
+CallScribe automates the "busy work" so the human can focus on the human.
+- **👂 Listens**: Transcribes audio in real-time using medical-grade AI.
+- **🧠 Thinks**: Extracts symptoms, patient age, and urgency automatically.
+- **🚀 Acts**: Calculates traffic-based ETAs and recommends the nearest ambulance.
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## ✨ Key Features
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🎙️ Live Transcription (ElevenLabs Scribe)
+Forget typing. We use **ElevenLabs Scribe v2** to transcribe audio with human-level accuracy, handling accents, medical terms, and overlapping speech (Diarization) in real-time.
 
-**Use your preferred IDE**
+### 🧠 Intelligent Triage (Google Gemini)
+Our background AI engine analyzesthe transcript every 5 seconds to:
+- **Detect Symptoms**: "Chest pain", "Slurred speech".
+- **Assess Urgency**: Automatically flags calls as **Stable**, **Urgent**, or **Critical**.
+- **Generate Checklists**: Pushes live SOPs (e.g., "Start CPR") to the operator's screen.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🚑 Smart Dispatch (Featherless + OpenRouter)
+Who is *actually* closest?
+- Real-time map with moving ambulance markers.
+- **Featherless (GLM-4)** calculates complex logistics and traffic patterns.
+- **OpenRouter (GPT-4o)** serves as a robust fallback to ensure 99.99% uptime.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 📱 "Walkie-Talkie" Audio System
+A custom bi-directional audio pipeline that allows:
+- **Cross-Device Communication**: Operator on Laptop ↔️ Paramedic on iPhone.
+- **On-the-Fly Conversion**: Transcodes web audio (WebM) to iOS-compatible formats (AAC/MP4) instantly on the server.
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🛠️ Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **Frontend**: React, TypeScript, TailwindCSS, Shadcn/UI, Leaflet Maps.
+- **Backend**: Node.js, Express, Socket.io (Real-time events).
+- **AI**: ElevenLabs Scribe (STT), Google Gemini (Analysis), Featherless/OpenRouter (Logistics).
+- **Database**: MongoDB Atlas (Encrypted storage).
+- **Infrastructure**: PM2, FFmpeg (Server-side processing).
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 20+
+- MongoDB URI
+- API Keys (ElevenLabs, Gemini, OpenRouter)
+
+### Installation
+```bash
+# Clone the repo
+git clone https://github.com/dave22r/callscribe.git
+
+# Install dependencies
+npm install
+
+# Setup Environment
+cp .env.example .env
+# (Fill in your API keys)
 ```
 
-**Edit a file directly in GitHub**
+### Run Locally
+```bash
+# Starts both Frontend (Vite) and Backend (Node) concurrently
+npm run dev:all
+```
+Open `http://localhost:8080` to see the Dispatch Dashboard.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 🔒 Privacy & Security
+CallScribe uses a **Zero-Retention Architecture**.
+- AI analysis is performed in-memory and discarded.
+- Audio files are cryptographically deleted immediately after processing.
+- Data is only persisted in your secure, encrypted MongoDB instance.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+*Built with ❤️ for the Hackathon.*
