@@ -1,91 +1,61 @@
-# Welcome to your Lovable project
+# CallScribe 
 
-## Project info
+**The national response time goal for paramedics in Canada is 8 minutes 59 seconds, for the most serious emergencies, and according to the BCHRN , in the province of British Columbia, this goal is only being met 30% of the time.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+CallScribe is a next-generation dispatch interface that uses **Real-Time AI** to listen, transcribe, and analyze emergency calls instantly. It empowers operators to make faster, data-driven decisions when every moment counts.
 
-## How can I edit this code?
+## The Problem
 
-There are several ways of editing your application.
+Emergency dispatchers operate in one of the most high-stakes environments imaginable. In just a few minutes, they must extract critical information from callers who may be panicked, injured, or speaking a different language, all while knowing that missing a single question (such as breathing or scene safety) can have life-or-death consequences.
 
-**Use Lovable**
+##  The Solution
+CallScribe automates the "busy work" so the human can focus on the human.
+- **Listens**: Transcribes audio in real-time using medical-grade AI.
+- **Thinks**: Extracts symptoms, patient age, and urgency automatically.
+- **Acts**: Calculates traffic-based ETAs and recommends the nearest ambulance.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Key Features
 
-**Use your preferred IDE**
+### Live Transcription (ElevenLabs Scribe)
+Forget typing. We use **ElevenLabs Scribe v2** to transcribe audio with human-level accuracy, handling accents, diff languages medical terms, and overlapping speech (Diarization) in real-time.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Intelligent Triage (Google Gemini)
+Our background AI engine analyzesthe transcript every 5 seconds to:
+- **Detect Symptoms**: "Chest pain", "Slurred speech".
+- **Assess Urgency**: Automatically flags calls as **Stable**, **Urgent**, or **Critical**.
+- **Generate Checklists**: Pushes live SOPs to the operator's screen.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Smart Dispatch (Featherless + OpenRouter)
+Who is *actually* closest?
+- Real-time map with moving ambulance markers.
+- **Featherless (GLM-4)** calculates complex logistics and traffic patterns.
+- **OpenRouter (GPT-4o)** serves as a robust fallback to ensure uptime.
 
-Follow these steps:
+### Audio Playback
+A custom bi-directional audio pipeline that allows:
+- **Cross-Device Communication**: Operator on Laptop ↔️ Paramedic on iPhone.
+- **On-the-Fly Conversion**: Transcodes web audio (WebM) to iOS-compatible formats (AAC/MP4) instantly on the server.
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **Frontend**: React, TypeScript, TailwindCSS, Shadcn/UI, Leaflet Maps.
+- **Backend**: Node.js, Express, Socket.io (Real-time events).
+- **AI**: ElevenLabs Scribe (STT), Google Gemini (Analysis & Transalation), Featherless/OpenRouter (Logistics).
+- **Database**: MongoDB Atlas (Encrypted storage).
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## Privacy & Security
+CallScribe uses a **Zero-Retention Architecture**.
+- AI analysis is performed in-memory and discarded.
+- Audio files are cryptographically deleted immediately after processing.
+- Data is only persisted in your secure, encrypted MongoDB instance.
 
-### Live transcription (ElevenLabs)
+---
 
-To use **live transcription** (mic → real-time transcript in the dashboard):
-
-1. Get an API key from [ElevenLabs](https://elevenlabs.io/app/settings/api-keys) and create a `.env` file (see `.env.example`):
-   ```bash
-   ELEVENLABS_API_KEY=your_api_key_here
-   ```
-2. Start the token server (so the API key stays server-side):
-   ```bash
-   npm run server
-   ```
-   Leave it running in a separate terminal (default: http://localhost:3001).
-3. Start the app: `npm run dev`.
-4. In the app, click **Start live transcription** in the Live Transcript panel and allow microphone access. Speak to see the transcript update in real time.
-
-To run both frontend and token server in one go: `npm run dev:all`.
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Demo
+https://callscribe.onrender.com
+https://www.youtube.com/watch?v=Ft1t0QtdnL8
